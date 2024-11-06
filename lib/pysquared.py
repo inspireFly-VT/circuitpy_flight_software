@@ -21,6 +21,7 @@ import adafruit_pca9685 # LED Driver
 import adafruit_tca9548a # I2C Multiplexer
 import adafruit_pct2075 # Temperature Sensor
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX #IMU
+import adafruit_lis2mdl  # Magnetometer
 import adafruit_vl6180x # LiDAR Distance Sensor for Antenna
 import adafruit_ina219  # Power Monitor
 #import payload
@@ -135,6 +136,7 @@ class Satellite:
         }
         self.hardware = {
                        'IMU':    False,
+                       'Mag':    False,
                        'Radio1': False,
                        'SDcard': False,
                        'LiDAR':  False,
@@ -317,6 +319,14 @@ class Satellite:
         except Exception as e:
             self.debug_print('[ERROR][IMU]' + ''.join(traceback.format_exception(e)))
         
+        # Initialize Magnetometer
+        try:
+            self.mangetometer = adafruit_lis2mdl.LIS2MDL(self.i2c1)
+            self.hardware["Mag"] = True
+        except Exception as e:
+            self.error_print("[ERROR][Magnetometer]")
+            traceback.print_exception(None, e, e.__traceback__)
+
 
         # Initialize Power Monitor
         try:

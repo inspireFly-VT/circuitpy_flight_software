@@ -252,7 +252,7 @@ class functions:
             data=[]
             data.append(self.cubesat.IMU.acceleration)
             data.append(self.cubesat.IMU.gyro)
-            #data.append(self.cubesat.IMU.Magnetometer)
+            data.append(self.cubesat.IMU.Magnetometer)
         except Exception as e:
             self.debug_print("Error retrieving IMU data" + ''.join(traceback.format_exception(e)))
         
