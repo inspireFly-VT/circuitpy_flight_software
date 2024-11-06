@@ -208,6 +208,7 @@ def normal_power_operations():
 
                 debug_print("IMU has baton")
                 IMUData = f.get_imu_data()
+                print(IMUData)
                 f.send(IMUData)
                 f.face_data_baton = False
 

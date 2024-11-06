@@ -181,7 +181,8 @@ class functions:
         #This just passes the message through. Maybe add more functionality later. 
         try:
             self.debug_print("Listening")
-            self.cubesat.radio1.receive_timeout=10
+            # Change timeout back to 10
+            self.cubesat.radio1.receive_timeout=0.5
             received = self.cubesat.radio1.receive(keep_listening=True)
         except Exception as e:
             self.debug_print("An Error has occured while listening: " + ''.join(traceback.format_exception(e)))
@@ -252,7 +253,7 @@ class functions:
             data=[]
             data.append(self.cubesat.IMU.acceleration)
             data.append(self.cubesat.IMU.gyro)
-            data.append(self.cubesat.IMU.Magnetometer)
+            data.append(self.cubesat.magnetometer.magnetic)
         except Exception as e:
             self.debug_print("Error retrieving IMU data" + ''.join(traceback.format_exception(e)))
         

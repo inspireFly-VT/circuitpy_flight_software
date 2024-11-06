@@ -12,7 +12,7 @@ def debug_print(statement):
 
 f = functions.functions(c)
 
-while True:
+while True:  # Magnetometer
     time.sleep(3)
     IMUdata = []
     debug_print("Getting IMU Data...")
@@ -20,6 +20,7 @@ while True:
 
     #this should be in the order acceleration, gyroscope, and magnometer
     debug_print(IMUdata)
+    print()
 
 
 

@@ -24,7 +24,7 @@ from adafruit_lsm6ds.lsm6dsox import LSM6DSOX #IMU
 import adafruit_lis2mdl  # Magnetometer
 import adafruit_vl6180x # LiDAR Distance Sensor for Antenna
 import adafruit_ina219  # Power Monitor
-#import payload
+import payload
 
 # Common CircuitPython Libs
 from os import listdir,stat,statvfs,mkdir,chdir
@@ -127,7 +127,8 @@ class Satellite:
         self.radio_cfg = {
                         'id':   0xfb,
                         'gs':   0xfa,
-                        'freq': 437.4,
+                        #'freq': 437.4,
+                        'freq': 915,
                         'sf':   8,
                         'bw':   125,
                         'cr':   8,
@@ -136,7 +137,7 @@ class Satellite:
         }
         self.hardware = {
                        'IMU':    False,
-                       'Mag':    False,
+                       'Mag':    False, 
                        'Radio1': False,
                        'SDcard': False,
                        'LiDAR':  False,
@@ -318,15 +319,16 @@ class Satellite:
             self.hardware['IMU'] = True
         except Exception as e:
             self.debug_print('[ERROR][IMU]' + ''.join(traceback.format_exception(e)))
-        
+            
         # Initialize Magnetometer
         try:
-            self.mangetometer = adafruit_lis2mdl.LIS2MDL(self.i2c1)
+            self.magnetometer = adafruit_lis2mdl.LIS2MDL(self.i2c1)
             self.hardware["Mag"] = True
         except Exception as e:
             self.error_print("[ERROR][Magnetometer]")
             traceback.print_exception(None, e, e.__traceback__)
 
+        
 
         # Initialize Power Monitor
         try:
