@@ -203,6 +203,8 @@ class Face:
                     self.datalist.append(self.temperature)
                 except Exception as e:
                     self.debug_print('[ERROR][Temperature Sensor]' + ''.join(traceback.format_exception(e)))
+            elif self.position == "z-":
+                pass
             else:
                 self.debug_print('[ERROR]Temperature Sensor Failure')
                 self.datalist.append(None)
@@ -216,6 +218,8 @@ class Face:
                     self.datalist.append(self.lux_data)
                 except Exception as e: 
                     self.debug_print('[ERROR][Light Sensor]' + ''.join(traceback.format_exception(e)))
+            elif self.position == "z-":
+                pass
             else:
                 self.debug_print('[ERROR]Light Sensor Failure')
                 self.datalist.append(None)
