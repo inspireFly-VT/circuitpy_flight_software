@@ -13,15 +13,13 @@ from storage import mount,umount,VfsFat
 import digitalio, sdcardio, pwmio
 from debugcolor import co
 import gc
-#import os
+
 # Hardware Specific Libs
 import pysquared_rfm9x  # Radio
-import neopixel         # RGB LED
+#import neopixel         # RGB LED
 import adafruit_pca9685 # LED Driver
 import adafruit_tca9548a # I2C Multiplexer
 import adafruit_pct2075 # Temperature Sensor
-from adafruit_lsm6ds.lsm6dsox import LSM6DSOX #IMU
-import adafruit_lis2mdl  # Magnetometer
 import adafruit_vl6180x # LiDAR Distance Sensor for Antenna
 import adafruit_ina219  # Power Monitor
 import payload
@@ -104,13 +102,12 @@ class Satellite:
         Big init routine as the whole board is brought up.
         """
         self.debug=True #Define verbose output here. True or False
-        self.BOOTTIME= const(time.time())
-        #self.BOOTTIME = 0
+        self.BOOTTIME= 0
         self.debug_print(f'Boot time: {self.BOOTTIME}s')
         self.CURRENTTIME=self.BOOTTIME
         self.UPTIME=0
         self.heating=False
-        self.is_licensed=True
+        self.is_licensed=False
         self.NORMAL_TEMP=20
         self.NORMAL_BATT_TEMP=1#Set to 0 BEFORE FLIGHT!!!!!
         self.NORMAL_MICRO_TEMP=20
@@ -127,8 +124,7 @@ class Satellite:
         self.radio_cfg = {
                         'id':   0xfb,
                         'gs':   0xfa,
-                        #'freq': 437.4,
-                        'freq': 433,
+                        'freq': 437.4,
                         'sf':   8,
                         'bw':   125,
                         'cr':   8,
@@ -137,11 +133,9 @@ class Satellite:
         }
         self.hardware = {
                        'IMU':    False,
-                       'Neopix': False,
-                       'Mag':    False, 
                        'Radio1': False,
                        'SDcard': False,
-                       #'LiDAR':  False,
+                       'LiDAR':  False,
                        'WDT':    False,
                        'SOLAR':  False,
                        'PWR':    False,
@@ -157,25 +151,14 @@ class Satellite:
 
         # Define burn wires:
         
-        # Change board.BURN_RELAY to board.GP17 to D5
-        self._relayA = digitalio.DigitalInOut(board.D7)
-        #self._relayA = digitalio.DigitalInOut(board.GP17)
+        # Change board.BURN_RELAY to board.GP17
+        self._relayA = digitalio.DigitalInOut(board.GP17)
         #self._relayA = digitalio.DigitalInOut(board.BURN_RELAY)
-    
-        """
-        Setting up the watchdog pin.
-        """
-        
-        self.watchdog_pin = digitalio.DigitalInOut(board.WDT_WDI)
-        self.watchdog_pin.direction = digitalio.Direction.OUTPUT
-        self.watchdog_pin.value = False
-        
         
         self._relayA.switch_to_output(drive_mode=digitalio.DriveMode.OPEN_DRAIN)
         
-        # Changed board.VBUS_RESET to board.GP14 to D4
-        self._resetReg = digitalio.DigitalInOut(board.D4)
-        #self._resetReg = digitalio.DigitalInOut(board.GP14)
+        # Changed board.VBUS_RESET to board.GP14
+        self._resetReg = digitalio.DigitalInOut(board.GP14)
         #self._resetReg = digitalio.DigitalInOut(board.VBUS_RESET)
         
         self._resetReg.switch_to_output(drive_mode=digitalio.DriveMode.OPEN_DRAIN)
@@ -183,28 +166,24 @@ class Satellite:
 
         # Define SPI,I2C,UART | paasing I2C1 to BigData
         try:
-            #Changed from SCL0 to GP5 to I2C0_SCL, and SDA0 to GP4 to I2C0_SDA
-            self.i2c0 = busio.I2C(board.I2C0_SCL,board.I2C0_SDA,timeout=5)
-            #self.i2c0 = busio.I2C(board.GP5,board.GP4,timeout=5)
+            #Changed from SCL0 to GP5, and SDA0 to GP4
+            self.i2c0 = busio.I2C(board.GP5,board.GP4,timeout=5)
             #self.i2c0 = busio.I2C(board.SCL0,board.SDA0,timeout=5)
             
-            # Changed SPIO_SCK to GP10 to SPI0_SCK, SPIO_MOSI to GP11 to SPI0_MOSI, SPIO_MISO to GP8 to SPI0_MISO
-            self.spi0 = busio.SPI(board.SPI0_SCK,board.SPI0_MOSI,board.SPI0_MISO)
-            #self.spi0 = busio.SPI(board.GP10,board.GP11,board.GP8)
+            # Changed SPIO_SCK to GP10, SPIO_MOSI to GP11, SPIO_MISO to GP8
+            self.spi0 = busio.SPI(board.GP10,board.GP11,board.GP8)
             #self.spi0 = busio.SPI(board.SPI0_SCK,board.SPI0_MOSI,board.SPI0_MISO)
             
-            # Changed SCL1 to GP3 to I2C1_SCL, SDA1 to GP2 to I2C1_SDA
-            self.i2c1 = busio.I2C(board.I2C1_SCL, board.I2C1_SDA, timeout=5,frequency=100000)
-            #self.i2c1 = busio.I2C(board.GP3,board.GP2,timeout=5,frequency=100000)
+            # Changed SCL1 to GP3, SDA1 to GP2
+            self.i2c1 = busio.I2C(board.GP3,board.GP2,timeout=5,frequency=100000)
             #self.i2c1 = busio.I2C(board.SCL1,board.SDA1,timeout=5,frequency=100000)
             
             # Changed SPI1_SCK to (Commenting it out because we don't have spi1 on our board)
             # self.spi1 = busio.SPI(board.SPI1_SCK,board.SPI1_MOSI,board.SPI1_MISO)
             #self.spi1 = busio.SPI(board.SPI1_SCK,board.SPI1_MOSI,board.SPI1_MISO)
             
-            # Changed TX to GP0 to TX, RX to GP1 to RX
-            self.uart = busio.UART(board.TX,board.RX,baudrate=self.urate)
-            #self.uart = busio.UART(board.GP0,board.GP1,baudrate=self.urate)
+            # Changed TX to GP0, RX to GP1
+            self.uart = busio.UART(board.GP0,board.GP1,baudrate=self.urate)
             #self.uart = busio.UART(board.TX,board.RX,baudrate=self.urate)
             
         except Exception as e:
@@ -231,9 +210,8 @@ class Satellite:
 
         #Define I2C Reset
             
-        #Changed board.I2C_RESET to GP7 to VS
-        self._i2c_reset = digitalio.DigitalInOut(board.VS)
-        #self._i2c_reset = digitalio.DigitalInOut(board.GP7)
+        #Changed board.I2C_RESET to GP7
+        self._i2c_reset = digitalio.DigitalInOut(board.GP7)
         #self._i2c_reset = digitalio.DigitalInOut(board.I2C_RESET)
         
         
@@ -250,30 +228,25 @@ class Satellite:
             self.f_softboot=False
 
         # Define radio
-        # Changed from SPIO_CS to GP9 to SPI0_CS0
-        _rf_cs1 = digitalio.DigitalInOut(board.SPI0_CS0)
-        #_rf_cs1 = digitalio.DigitalInOut(board.GP9)
+        # Changed from SPIO_CS to GP7
+        _rf_cs1 = digitalio.DigitalInOut(board.GP9)
         #_rf_cs1 = digitalio.DigitalInOut(board.SPI0_CS)
-          
-        # Changed from RF_RESET to GP20 to RF1_RST
-        _rf_rst1 = digitalio.DigitalInOut(board.RF1_RST)
-        #_rf_rst1 = digitalio.DigitalInOut(board.GP20)
         
         
-        #Changed from ENABLE_RF to GP12 to D2
-        self.enable_rf = digitalio.DigitalInOut(board.D2)
-        #self.enable_rf = digitalio.DigitalInOut(board.GP12)
+        # Changed from RF_RESET to GP20
+        _rf_rst1 = digitalio.DigitalInOut(board.GP20)
+        
+        #Changed from ENABLE_RF to GP12
+        self.enable_rf = digitalio.DigitalInOut(board.GP12)
         #self.enable_rf = digitalio.DigitalInOut(board.ENABLE_RF)
         
         
-        # Changed from RF_IO0 to GP23 to RF1_IO0
-        self.radio1_DIO0=digitalio.DigitalInOut(board.RF1_IO0)
-        #self.radio1_DIO0=digitalio.DigitalInOut(board.GP23)
+        # Changed from RF_IO0 to GP23
+        self.radio1_DIO0=digitalio.DigitalInOut(board.GP23)
         #self.radio1_DIO0=digitalio.DigitalInOut(board.RF_IO0)
         
-        # Changed from RF_IO4 to GP22 to RF1_IO4
-        self.radio1_DIO4=digitalio.DigitalInOut(board.RF1_IO4)
-        #self.radio1_DIO4=digitalio.DigitalInOut(board.GP22)
+        # Changed from RF_IO4 to GP22
+        self.radio1_DIO4=digitalio.DigitalInOut(board.GP22)
         #self.radio1_DIO4=digitalio.DigitalInOut(board.RF_IO4)
 
         # self.enable_rf.switch_to_output(value=False) # if U21
@@ -289,13 +262,16 @@ class Satellite:
 
 
         # Initialize SD card
-        
+        """
         try:
             # Baud rate depends on the card, 4MHz should be safe
             # Changed spi1 to spi0 (, SPI1_CS to SPi0_CS1 (GP26)
-
-            sys.path.append("/sd")
-            _sd = sdcardio.SDCard(self.spi0, board.SPI0_CS1, baudrate=4000000)
+            
+            #_sd = sdcardio.SDCard(self.spi0, board.GP26, baudrate=4000000)
+            
+            #_sd = sdcardio.SDCard(self.spi1, board.SPI1_CS, baudrate=4000000)
+            
+            
             _vfs = VfsFat(_sd)
             mount(_vfs, "/sd")
             self.fs=_vfs
@@ -303,42 +279,32 @@ class Satellite:
             self.hardware['SDcard'] = True
         except Exception as e:
             self.debug_print('[ERROR][SD Card]' + ''.join(traceback.format_exception(e)))
-          
+        """    
             
-        
+        """
         # Initialize Neopixel
         try:
-            self.neopwr = digitalio.DigitalInOut(board.NEO_PWR)
+            self.neopwr = digitalio.DigitalInOut(board.NEOPIXEL_POWER)
             self.neopwr.switch_to_output(value=True)
-            self.neopixel = neopixel.NeoPixel(board.NEOPIX, 1, brightness=0.2, pixel_order=neopixel.GRB)
+            self.neopixel = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2, pixel_order=neopixel.GRB)
             self.neopixel[0] = (0,0,255)
-            self.hardware['Neopix'] = True
+            self.hardware['Neopixel'] = True
         except Exception as e:
             self.debug_print('[WARNING][Neopixel]' + ''.join(traceback.format_exception(e)))
-        
+        """
         # Initialize IMU
-        
+        """
         try:
             self.data=[
                 "acceleration",
                 "gyroscope",
                 "magnetometer",
             ]
-            #self.IMU = payload.PAYLOAD(self.debug,self.i2c1,self.data)
-            self.IMU = LSM6DSOX(self.i2c1)
+            self.IMU = payload.PAYLOAD(self.debug,self.i2c1,self.data)
             self.hardware['IMU'] = True
         except Exception as e:
             self.debug_print('[ERROR][IMU]' + ''.join(traceback.format_exception(e)))
-            
-        # Initialize Magnetometer
-        try:
-            self.magnetometer = adafruit_lis2mdl.LIS2MDL(self.i2c1)
-            self.hardware["Mag"] = True
-        except Exception as e:
-            self.error_print("[ERROR][Magnetometer]")
-            traceback.print_exception(None, e, e.__traceback__)
-
-        
+        """
 
         # Initialize Power Monitor
         try:
@@ -387,11 +353,7 @@ class Satellite:
 
         # Initialize radio #1 - UHF
         try:
-            #self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, board.SPI0_CS0, board.RF1_RST,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
-            
             self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, _rf_cs1, _rf_rst1,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
-            
-            
             # Default LoRa Modulation Settings
             # Frequency: 437.4 MHz, SF7, BW125kHz, CR4/8, Preamble=8, CRC=True
             self.radio1.dio0=self.radio1_DIO0
@@ -559,20 +521,20 @@ class Satellite:
                 self.debug_print("x+ Face Powered Off")
         else:
             self.debug_print('[WARNING] LED Driver not initialized')
-    
+    """
     @property
     def RGB(self):
         return self.neopixel[0]
     @RGB.setter
     def RGB(self,value):
-        if self.hardware['Neopix']:
+        if self.hardware['Neopixel']:
             try:
                 self.neopixel[0] = value
             except Exception as e:
                 self.debug_print('[ERROR]' + ''.join(traceback.format_exception(e)))
         else:
             self.debug_print('[WARNING] neopixel not initialized')
-    
+    """
     @property
     def battery_voltage(self):
         if self.hardware['PWR']:
@@ -641,9 +603,6 @@ class Satellite:
     @property
     def uptime(self):
         self.CURRENTTIME=const(time.time())
-        print("(iF) CURRENTTIME: ", self.CURRENTTIME)
-        print("(iF) BOOTTIME: ", self.BOOTTIME)
-        print("(iF) UPTIME: ", self.UPTIME)
         return self.CURRENTTIME-self.BOOTTIME
 
     @property
@@ -651,13 +610,12 @@ class Satellite:
         # unmount SD card to avoid errors
         if self.hardware['SDcard']:
             try:
-                umount("/sd")
-                self.spi0.deinit()
+                umount('/sd')
+                self.spi.deinit()
                 time.sleep(3)
             except Exception as e:
                 self.debug_print('error unmounting SD card' + ''.join(traceback.format_exception(e)))
         try:
-            print("(iF) Running")
             self._resetReg.drive_mode=digitalio.DriveMode.PUSH_PULL
             self._resetReg.value=1
         except Exception as e:
@@ -698,7 +656,7 @@ class Satellite:
         self.UPTIME=self.uptime
         self.debug_print(str("Current up time: "+str(self.UPTIME)))
         if self.UPTIME>86400:
-            self.reset_vbus
+            self.reset_vbus()
 
     def print_file(self,filedir=None,binary=False):
         try:
@@ -820,12 +778,12 @@ class Satellite:
         """
         try:
             if 'crit' in mode:
-                self.neopixel.brightness=0
+            #    self.neopixel.brightness=0
                 self.enable_rf.value = False
                 self.power_mode = 'critical'
 
             elif 'min' in mode:
-                self.neopixel.brightness=0
+            #    self.neopixel.brightness=0
                 self.enable_rf.value = False
 
                 self.power_mode = 'minimum'
@@ -905,9 +863,7 @@ class Satellite:
             # create our PWM object for the respective pin
             # not active since duty_cycle is set to 0 (for now)
             if '1' in burn_num:
-                #Changing GP6 to PC
-                burnwire = pwmio.PWMOut(board.PC, frequency=freq, duty_cycle=0)
-                #burnwire = pwmio.PWMOut(board.GP6, frequency=freq, duty_cycle=0)
+                burnwire = pwmio.PWMOut(board.GP6, frequency=freq, duty_cycle=0)
             else:
                 return False
             # Configure the relay control pin & open relay
@@ -965,8 +921,8 @@ class Satellite:
             # create our PWM object for the respective pin
             # not active since duty_cycle is set to 0 (for now)
             if '1' in burn_num:
-                # Change BURN_ENABLE to GP6 to PC
-                burnwire = pwmio.PWMOut(board.PC, frequency=freq, duty_cycle=0)
+                # Change BURN_ENABLE to GP6
+                burnwire = pwmio.PWMOut(board.GP6, frequency=freq, duty_cycle=0)
                 #burnwire = pwmio.PWMOut(board.BURN_ENABLE, frequency=freq, duty_cycle=0)
             else:
                 return False
@@ -1114,3 +1070,4 @@ class Satellite:
 
 print("Initializing CubeSat")
 cubesat = Satellite()
+

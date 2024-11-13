@@ -36,7 +36,11 @@ try:
     dutycycle=0.15
     done=True
     debug_print("(iF) burn attempt status stuff")
-    done = c.burn('1', dutycycle, 1000, 1)
+    
+    for i in range(5):
+        done = c.burn('1', dutycycle, 1000, 1.2)
+        time.sleep(0.5)
+    #done = c.burn('1', dutycycle, 1000, 1)
     #done=c.smart_burn('1',dutycycle)
 
     

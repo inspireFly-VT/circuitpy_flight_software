@@ -43,8 +43,7 @@ class EasyComms:
     def read_bytes(self, lowerchunk, upperchunk) -> bytes:
         message = b""
         count = 0
-        chunksize = 60
-        time.sleep(2)  # wait for bytes to come in
+        chunksize = 70
         
         # Collect Chunks
         for i in range(int(lowerchunk), int(upperchunk) + 1):

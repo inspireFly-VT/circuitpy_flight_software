@@ -24,7 +24,7 @@ class functions:
         self.facestring=[]
         self.jokes=["Hey Its pretty cold up here, did someone forget to pay the electric bill?"]
         self.last_battery_temp = 20
-        self.callsign="K4KDJ"
+        self.callsign="KQ4LFD"
         self.state_bool=False
         self.face_data_baton = False
         self.detumble_enable_z = True
@@ -324,7 +324,7 @@ class functions:
             try:
                 import detumble
                 for _ in range(3):
-                    data=[self.cubesat.IMU.Gyroscope,self.cubesat.IMU.Magnetometer]
+                    data=[self.cubesat.IMU.gyro,self.cubesat.IMU.Magnetometer]
                     data[0]=list(data[0])
                     for x in range(3):
                         if data[0][x] < 0.01:
