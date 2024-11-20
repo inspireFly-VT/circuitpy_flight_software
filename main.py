@@ -37,7 +37,7 @@ try:
     done=True
     debug_print("(iF) burn attempt status stuff")
     
-    for i in range(5):
+    for i in range(1):
         done = c.burn('1', dutycycle, 1000, 1.2)
         time.sleep(0.5)
     #done = c.burn('1', dutycycle, 1000, 1)
@@ -212,7 +212,6 @@ def normal_power_operations():
 
                 debug_print("IMU has baton")
                 IMUData = f.get_imu_data()
-                print(IMUData)
                 f.send(IMUData)
                 f.face_data_baton = False
 
