@@ -1,6 +1,7 @@
 import time
 import board
 import busio
+from lib.pysquared import cubesat as c
 
 class EasyComms:
     
@@ -8,12 +9,12 @@ class EasyComms:
     baud_rate = 9600
     timeout = 5  # Timeout in seconds
     
-    # Backend setup
+#     # Backend setup
     def __init__(self, uart_tx_pin, uart_rx_pin, baud_rate=None):
-        if baud_rate:
-            self.baud_rate = baud_rate
-        # Set up UART interface
-        self.uart = busio.UART(uart_tx_pin, uart_rx_pin, baudrate=self.baud_rate, timeout=self.timeout)
+#         if baud_rate:
+#             self.baud_rate = baud_rate
+#         # Set up UART interface
+          self.uart = c.uart
     
     # Send bytes across
     def send_bytes(self, data: bytes):

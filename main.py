@@ -13,6 +13,9 @@ import gc #Garbage collection
 import microcontroller
 import functions
 from debugcolor import co
+from easy_comms_circuit import EasyComms
+import board
+from FCB_class import FCBCommunicator
 def debug_print(statement):
     if c.debug:
         print(co("[MAIN]" + str(statement), 'blue', 'bold'))
@@ -255,6 +258,45 @@ def normal_power_operations():
             gc.collect()
             await asyncio.sleep(500)
     
+    async def pcb_comms():
+        debug_print("Yapping to the PCB now - D")
+
+        #await asyncio.sleep(600)
+
+        
+        # Initialize communication and FCBCommunicator
+        com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
+        com1.start()
+        fcb_comm = FCBCommunicator(com1)
+
+        # Start interaction loop
+        while True:
+            overhead_command = com1.overhead_read()
+
+            # Set the command
+            command = 'chunk'
+            time.sleep(2)
+
+            if command.lower() == 'chunk':
+                fcb_comm.send_command("chunk")
+                
+                if fcb_comm.wait_for_acknowledgment():
+                    jpg_bytes = fcb_comm.send_chunk_request()
+                    
+                    if jpg_bytes is not None:
+                        fcb_comm.save_image(jpg_bytes)
+                        
+            command = 'end'
+            
+            if command.lower() == 'end':
+                fcb_comm.end_communication()
+                time.sleep(3)
+                break
+
+            else:
+                print("Wrong command entered, try again.")
+            #await asyncio.sleep(600)
+
     async def main_loop():
         #log_face_data_task = asyncio.create_task(l_face_data())
             
@@ -263,9 +305,10 @@ def normal_power_operations():
         t3 = asyncio.create_task(s_imu_data())
         t4 = asyncio.create_task(g_face_data())
         t5 = asyncio.create_task(detumble())
-        t6 = asyncio.create_task(joke())
+        #t6 = asyncio.create_task(joke())
+        t7 = asyncio.create_task(pcb_comms())
         
-        await asyncio.gather(t1,t2,t3,t4,t5,t6)
+        await asyncio.gather(t1,t2,t3,t4,t5,t7)
         
     asyncio.run(main_loop())
 

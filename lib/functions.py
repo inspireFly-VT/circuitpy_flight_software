@@ -24,7 +24,8 @@ class functions:
         self.facestring=[]
         self.jokes=["Hey Its pretty cold up here, did someone forget to pay the electric bill?"]
         self.last_battery_temp = 20
-        self.callsign="KQ4LFD"
+        #self.callsign="KQ4LFD"
+        self.callsign=""
         self.state_bool=False
         self.face_data_baton = False
         self.detumble_enable_z = True
@@ -97,8 +98,8 @@ class functions:
         self.field = Field.Field(self.cubesat,self.debug)
         message=f"{self.callsign} " + str(msg) + f" {self.callsign}"
         self.field.Beacon(message)
-        if self.cubesat.f_fsk:
-            self.cubesat.radio1.cw(message)
+#         if self.cubesat.f_fsk:
+#             self.cubesat.radio1.cw(message)
         if self.cubesat.is_licensed:
             self.debug_print(f"Sent Packet: " + message)
         else:
@@ -117,14 +118,28 @@ class functions:
 
         self.field = Field.Field(self.cubesat,self.debug)
         self.field.Beacon(lora_beacon)
-        if self.cubesat.f_fsk:
-            self.cubesat.radio1.cw(lora_beacon)
+#         if self.cubesat.f_fsk:
+#             self.cubesat.radio1.cw(lora_beacon)
         del self.field
         del Field
     
     def joke(self):
         self.send(random.choice(self.jokes))
-    
+        
+    def format_state_of_health(self, hardware):
+        to_return = ""
+        for key, value in hardware.items():
+            to_return = to_return + key + "="
+            if value:
+                to_return += "1"
+            else:
+                to_return += "0"
+
+            if len(to_return) > 245:
+                return to_return
+
+        return to_return
+        
 
     def state_of_health(self):
         import Field
@@ -152,14 +167,14 @@ class functions:
         
         self.field = Field.Field(self.cubesat,self.debug)
         if not self.state_bool:
-            self.field.Beacon(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
-            if self.cubesat.f_fsk:
-                self.cubesat.radio1.cw(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
+            self.field.Beacon(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.format_state_of_health(self.cubesat.hardware))+ f"{self.callsign}")
+#             if self.cubesat.f_fsk:
+#                 self.cubesat.radio1.cw(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
             self.state_bool=True
         else:
             self.field.Beacon(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
-            if self.cubesat.f_fsk:
-                self.cubesat.radio1.cw(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
+#             if self.cubesat.f_fsk:
+#                 self.cubesat.radio1.cw(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
             self.state_bool=False
         del self.field
         del Field
@@ -171,8 +186,8 @@ class functions:
         self.field = Field.Field(self.cubesat,self.debug)
         self.debug_print("Sending Face Data")
         self.field.Beacon(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
-        if self.cubesat.f_fsk:
-                self.cubesat.radio1.cw(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
+#         if self.cubesat.f_fsk:
+#                 self.cubesat.radio1.cw(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
         del self.field
         del Field
     
@@ -182,8 +197,8 @@ class functions:
         try:
             self.debug_print("Listening")
             # Change timeout back to 10
-            self.cubesat.radio1.receive_timeout=0.5
-            received = self.cubesat.radio1.receive(keep_listening=True)
+            self.cubesat.radio1.receive_timeout=10
+            received = self.cubesat.radio1.receive_with_ack(keep_listening=True)
         except Exception as e:
             self.debug_print("An Error has occured while listening: " + ''.join(traceback.format_exception(e)))
             received=None

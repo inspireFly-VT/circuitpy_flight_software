@@ -16,24 +16,28 @@ class Field():
     def __init__(self,cubesat,debug):
         self.debug=debug
         self.cubesat=cubesat
-        try:
-            self.cubesat.enable_rf.value=True
-            self.cubesat.radio1.spreading_factor=8
-            self.cubesat.radio1.low_datarate_optimize=False
-            self.cubesat.radio1.node=0xfb
-            self.cubesat.radio1.destination=0xfa
-            self.cubesat.radio1.receive_timeout=10
-            self.cubesat.radio1.enable_crc=True
-            if self.cubesat.radio1.spreading_factor>8:
-                self.cubesat.radio1.low_datarate_optimize=True
-        except Exception as e:
-            self.debug_print("Error Defining Radio features: " + ''.join(traceback.format_exception(e)))
+#         try:
+#             self.cubesat.enable_rf.value=True
+#             self.cubesat.radio1.spreading_factor=8
+#             self.cubesat.radio1.low_datarate_optimize=False
+#             self.cubesat.radio1.node=0xfb
+#             self.cubesat.radio1.destination=0xfa
+#             self.cubesat.radio1.receive_timeout=10
+#             self.cubesat.radio1.enable_crc=True
+#             if self.cubesat.radio1.spreading_factor>8:
+#                 self.cubesat.radio1.low_datarate_optimize=True
+#         except Exception as e:
+#             self.debug_print("Error Defining Radio features: " + ''.join(traceback.format_exception(e)))
     
     def Beacon(self, msg):
         try:
             if self.cubesat.is_licensed:
                 self.debug_print("I am beaconing: " + str(msg))
                 self.cubesat.radio1.send(msg)
+                print(
+                    "Message Success: "
+                    + str(self.cubesat.radio1.send_with_ack(bytes(msg, "UTF-8")))
+                )
             else:
                 self.debug_print("Please toggle licensed variable in code once you obtain an ameteur radio license")
         except Exception as e:

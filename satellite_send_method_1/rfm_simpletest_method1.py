@@ -13,7 +13,7 @@ from adafruit_rfm import rfm9xfsk
 from satellite_send_method_1 import DataToAX25_method1
 
 # Define radio parameters.
-RADIO_FREQ_MHZ = 915.0  # Frequency of the radio in Mhz. Must match your
+RADIO_FREQ_MHZ = 433.0 # Frequency of the radio in Mhz. Must match your
 # module! Can be a value like 915.0, 433.0, etc.
 
 # Define pins connected to the chip, use these if wiring up the breakout according to the guide:
@@ -52,7 +52,7 @@ rfm = rfm9xfsk.RFM9xFSK(spi, CS, RESET, RADIO_FREQ_MHZ)
 # )
 
 # for OOK on RFM69 or RFM9xFSK
-rfm.modulation_type = 1
+rfm.modulation_type = 0
 
 # Send a packet.  Note you can only send a packet containing up to 60 bytes for an RFM69
 # and 252 bytes for an RFM9x.

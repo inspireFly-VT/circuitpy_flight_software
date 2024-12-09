@@ -154,8 +154,7 @@ class RFM9x:
     _BUFFER = bytearray(4)
     DEBUG_HEADER=False
     valid_ids  = (58,59,60,255)
-    class _RegisterBits:
-        # Class to simplify access to the many configuration bits avaialable
+    class _RegisterBits:        # Class to simplify access to the many configuration bits avaialable
         # on the chip's registers.  This is a subclass here instead of using
         # a higher level module to increase the efficiency of memory usage
         # (all of the instances of this bit class will share the same buffer
@@ -274,7 +273,7 @@ class RFM9x:
         time.sleep(0.01)
         self.long_range_mode = True
         if self.operation_mode != SLEEP_MODE or not self.long_range_mode:
-            raise RuntimeError("Failed to configure radio for LoRa mode, check wiring!")
+             raise RuntimeError("Failed to configure radio for LoRa mode, check wiring!")
         # clear default setting for access to LF registers if frequency > 525MHz
         if frequency > 525:
             self.low_frequency_mode = 0
@@ -387,7 +386,7 @@ class RFM9x:
         self.idle()
         # Set payload length VR3X Morse length = 51
         self._write_u8(0x35,len(msg)-1)
-        self._write_from(_RH_RF95_REG_00_FIFO, bytearray(msg))
+        self._write_from(_RH_RF95_REG_00_FIFO, bytearray(msg.encode('utf-8')))
 
         _t=time.monotonic() + 10
         self.operation_mode = TX_MODE
