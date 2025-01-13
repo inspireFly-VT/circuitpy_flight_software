@@ -2,8 +2,10 @@
 Created by Nicole Maggard and Michael Pham 8/19/2022
 Updated for Yearling by Nicole Maggard and Rachel Sarmiento 2/4/2023
 This is where the processes get scheduled, and satellite operations are handeled
-''' 
-from pysquared import cubesat as c
+'''
+print("Hi inspireFly")
+
+from lib.pysquared import cubesat as c
 import asyncio
 import time
 import traceback
@@ -11,6 +13,10 @@ import gc #Garbage collection
 import microcontroller
 import functions
 from debugcolor import co
+from easy_comms_circuit import EasyComms
+import board
+from FCB_class import FCBCommunicator
+from lib import rfm9xfsk
 def debug_print(statement):
     if c.debug:
         print(co("[MAIN]" + str(statement), 'blue', 'bold'))
@@ -31,8 +37,20 @@ try:
     distance2=0
     tries=0
     loiter_time = 270
-    dutycycle=0.2
+    dutycycle=0.15
     done=True
+    debug_print("(iF) burn attempt status stuff")
+    
+    for i in range(1):
+        done = c.burn('1', dutycycle, 1000, 1.2)
+        time.sleep(0.5)
+    #done = c.burn('1', dutycycle, 1000, 1)
+    #done=c.smart_burn('1',dutycycle)
+
+
+    
+    """
+    ******************ALL SMART_BURN CODE (commented out for testing)******************************
     debug_print("Burn attempt status: " + str(c.burnarm))
     debug_print("Burn status: " + str(c.burned))
     while c.burned is False and tries < 3:
@@ -55,6 +73,7 @@ try:
             except Exception as e:
                 debug_print("Error in Loiter Sequence: " + ''.join(traceback.format_exception(e)))
         try:
+            debug_print("(iF) smart burn function is executing")
             dutycycle=dutycycle+0.02
             done=c.smart_burn('1',dutycycle)
             tries+=1
@@ -74,7 +93,8 @@ try:
         else:
             debug_print("burn failed miserably!")
             break
-        
+    ******************************************************************************************            
+    """        
 
 
     f.beacon()
@@ -108,7 +128,7 @@ def minimum_power_operations():
     
     f.beacon()
     f.listen()
-    f.state_of_health()   
+    f.state_of_health()
     f.listen()
     
     f.Short_Hybernate() 
@@ -240,6 +260,45 @@ def normal_power_operations():
             gc.collect()
             await asyncio.sleep(500)
     
+    async def pcb_comms():                
+        debug_print("Yapping to the PCB now - D")
+        
+        #await asyncio.sleep(600)
+        # Initialize communication and FCBCommunicator
+        com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
+        com1.start()
+        fcb_comm = FCBCommunicator(com1)
+
+        # Start interaction loop
+        while True:
+            overhead_command = com1.overhead_read()
+
+            # Set the command
+            command = 'chunk'
+            time.sleep(2)
+
+            if command.lower() == 'chunk':
+                fcb_comm.send_command("chunk")
+                
+                if fcb_comm.wait_for_acknowledgment():
+                    jpg_bytes = fcb_comm.send_chunk_request()
+                    
+                    if jpg_bytes is not None:
+                        fcb_comm.save_image(jpg_bytes)
+                        
+            command = 'end'
+            
+            if command.lower() == 'end':
+                fcb_comm.end_communication()
+                time.sleep(3)
+                break
+
+            else:
+                print("Wrong command entered, try again.")
+            
+            gc.collect()
+            await asyncio.sleep(600)
+
     async def main_loop():
         #log_face_data_task = asyncio.create_task(l_face_data())
             
@@ -248,9 +307,10 @@ def normal_power_operations():
         t3 = asyncio.create_task(s_imu_data())
         t4 = asyncio.create_task(g_face_data())
         t5 = asyncio.create_task(detumble())
-        t6 = asyncio.create_task(joke())
+        #t6 = asyncio.create_task(joke())
+        t7 = asyncio.create_task(pcb_comms())
         
-        await asyncio.gather(t1,t2,t3,t4,t5,t6)
+        await asyncio.gather(t1,t2,t3,t4,t5,t7)
         
     asyncio.run(main_loop())
 
