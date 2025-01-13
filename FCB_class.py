@@ -9,6 +9,7 @@ class FCBCommunicator:
         self.image_counter = 0
         self.last_num = self.get_last_num()
 
+        #Uncomment for practical testing (Not using an IDE)
         #storage.remount("/", readonly=False)
 
     def send_command(self, command):
