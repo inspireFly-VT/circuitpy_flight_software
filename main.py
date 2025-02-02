@@ -262,42 +262,49 @@ def normal_power_operations():
     
     async def pcb_comms():                
         debug_print("Yapping to the PCB now - D")
-        
-        #await asyncio.sleep(600)
+
         # Initialize communication and FCBCommunicator
         com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
         com1.start()
         fcb_comm = FCBCommunicator(com1)
 
-        # Start interaction loop
-        while True:
-            overhead_command = com1.overhead_read()
+        try:
+            while True:
+                # Read overhead command
+                overhead_command = com1.overhead_read()
 
-            # Set the command
-            command = 'chunk'
-            time.sleep(2)
+                # Set the command
+                command = 'chunk'
+                await asyncio.sleep(2)  # Use await for non-blocking delay
 
-            if command.lower() == 'chunk':
-                fcb_comm.send_command("chunk")
-                
-                if fcb_comm.wait_for_acknowledgment():
-                    jpg_bytes = fcb_comm.send_chunk_request()
+                if command.lower() == 'chunk':
+                    fcb_comm.send_command("chunk")
                     
-                    if jpg_bytes is not None:
-                        fcb_comm.save_image(jpg_bytes)
+                    if fcb_comm.wait_for_acknowledgment():
+                        jpg_bytes = fcb_comm.send_chunk_request()
                         
-            command = 'end'
-            
-            if command.lower() == 'end':
-                fcb_comm.end_communication()
-                time.sleep(3)
-                break
+                        if jpg_bytes is not None:
+                            fcb_comm.save_image(jpg_bytes)
+                            
+                command = 'end'
+                
+                if command.lower() == 'end':
+                    fcb_comm.end_communication()
+                    await asyncio.sleep(3)  # Use async sleep
+                    break  # Exit loop when communication ends
 
-            else:
-                print("Wrong command entered, try again.")
-            
-            gc.collect()
-            await asyncio.sleep(600)
+                else:
+                    debug_print("Wrong command entered, try again.")
+                
+                gc.collect()
+                await asyncio.sleep(600)  # Non-blocking delay before next iteration
+
+        except Exception as e:
+            debug_print(f"Error in PCB Comms: {''.join(traceback.format_exception(e))}")
+
+        finally:
+            debug_print("Ending PCB Communication.")
+
 
     async def main_loop():
         #log_face_data_task = asyncio.create_task(l_face_data())
