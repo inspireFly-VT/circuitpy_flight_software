@@ -42,6 +42,7 @@ class FCBCommunicator:
             jpg_bytes, count = self.com.read_bytes(lowerchunk, upperchunk)
             print('Number of chunks received = ', count)
             print('Number of bytes received = ', len(jpg_bytes))
+            print(jpg_bytes)
             return jpg_bytes
         else:
             print('Incorrect input, only accepted whole numbers.')
@@ -59,5 +60,7 @@ class FCBCommunicator:
             print(f"Failed to write file: {e}")
 
     def end_communication(self):
+        time.sleep(3)
         self.send_command("end")
+        time.sleep(3)
         print("Ended communications.")
