@@ -13,9 +13,9 @@ from storage import mount,umount,VfsFat
 import digitalio, sdcardio, pwmio
 from debugcolor import co
 import gc
-#import os
+import os
 # Hardware Specific Libs
-#import pysquared_rfm9x  # Radio
+import pysquared_rfm9x  # Radio
 import rfm9x 			#Radio
 import rfm9xfsk 		#More Radio
 import neopixel         # RGB LED
@@ -391,7 +391,7 @@ class Satellite:
         try:
             #self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, board.SPI0_CS0, board.RF1_RST,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
             
-            #self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, _rf_cs1, _rf_rst1,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
+            self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, _rf_cs1, _rf_rst1,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
             if self.f_fsk:
                 self.radio1 = rfm9xfsk.RFM9xFSK(
                     self.spi0,
