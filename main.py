@@ -103,7 +103,7 @@ try:
     f.listen()
 
     c.battery_manager()
-    f.battery_heater()
+    #f.battery_heater()
     c.battery_manager() #Second check to make sure we have enough power to continue
 
     f.beacon()
@@ -141,7 +141,7 @@ def normal_power_operations():
     def check_power():
         gc.collect()
         c.battery_manager()
-        f.battery_heater()
+        #f.battery_heater()
         c.check_reboot()
         c.battery_manager() #Second check to make sure we have enough power to continue
         
@@ -281,6 +281,7 @@ def normal_power_operations():
                 fcb_comm.send_command("chunk")
                 
                 if fcb_comm.wait_for_acknowledgment():
+                    time.sleep(1)
                     jpg_bytes = fcb_comm.send_chunk_request()
                     
                     if jpg_bytes is not None:
