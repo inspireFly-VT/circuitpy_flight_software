@@ -78,24 +78,24 @@ class Satellite:
             self.Face4.duty_cycle = 0xffff
             self.hardware['Face4']=True
 
-#     def all_faces_off(self):
-#         #De-Power Faces
-#         if self.hardware['FLD']:
-#             self.Face0.duty_cycle = 0x0000
-#             time.sleep(0.1)
-#             self.hardware['Face0']=False
-#             self.Face1.duty_cycle = 0x0000
-#             time.sleep(0.1)
-#             self.hardware['Face1']=False
-#             self.Face2.duty_cycle = 0x0000
-#             time.sleep(0.1)
-#             self.hardware['Face2']=False
-#             self.Face3.duty_cycle = 0x0000
-#             time.sleep(0.1)
-#             self.hardware['Face3']=False
-#             self.Face4.duty_cycle = 0x0000
-#             time.sleep(0.1)
-#             self.hardware['Face4']=False
+    def all_faces_off(self):
+        #De-Power Faces
+        if self.hardware['FLD']:
+            self.Face0.duty_cycle = 0x0000
+            time.sleep(0.1)
+            self.hardware['Face0']=False
+            self.Face1.duty_cycle = 0x0000
+            time.sleep(0.1)
+            self.hardware['Face1']=False
+            self.Face2.duty_cycle = 0x0000
+            time.sleep(0.1)
+            self.hardware['Face2']=False
+            self.Face3.duty_cycle = 0x0000
+            time.sleep(0.1)
+            self.hardware['Face3']=False
+            self.Face4.duty_cycle = 0x0000
+            time.sleep(0.1)
+            self.hardware['Face4']=False
 
     def debug_print(self,statement):
         if self.debug:

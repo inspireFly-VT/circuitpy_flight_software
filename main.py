@@ -26,7 +26,7 @@ try:
     debug_print(str(gc.mem_free()) + " Bytes remaining")
 
     #power cycle faces to ensure sensors are on:
-    c.all_faces_off()
+    #c.all_faces_off()
     time.sleep(1)
     c.all_faces_on()
     #test the battery:
@@ -113,8 +113,8 @@ try:
 except Exception as e:
     debug_print("Error in Boot Sequence: " + ''.join(traceback.format_exception(e)))
 finally:
-    debug_print("All Faces off!")
-    c.all_faces_off()
+    #debug_print("All Faces off!")
+    #c.all_faces_off()
 
 def critical_power_operations():
     f.beacon()
@@ -348,6 +348,6 @@ except Exception as e:
     microcontroller.on_next_reset(microcontroller.RunMode.NORMAL)
     microcontroller.reset()
 finally:
-    debug_print("All Faces off!")
-    c.all_faces_off()
+    #debug_print("All Faces off!")
+    #c.all_faces_off()
     c.RGB=(0,0,0)
