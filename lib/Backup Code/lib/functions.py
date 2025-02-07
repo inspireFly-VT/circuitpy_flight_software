@@ -24,8 +24,7 @@ class functions:
         self.facestring=[]
         self.jokes=["Hey Its pretty cold up here, did someone forget to pay the electric bill?"]
         self.last_battery_temp = 20
-        self.callsign="KQ4LFD"
-        #self.callsign=""
+        self.callsign="Callsign"
         self.state_bool=False
         self.face_data_baton = False
         self.detumble_enable_z = True
@@ -98,8 +97,8 @@ class functions:
         self.field = Field.Field(self.cubesat,self.debug)
         message=f"{self.callsign} " + str(msg) + f" {self.callsign}"
         self.field.Beacon(message)
-#         if self.cubesat.f_fsk:
-#             self.cubesat.radio1.cw(message)
+        if self.cubesat.f_fsk:
+            self.cubesat.radio1.cw(message)
         if self.cubesat.is_licensed:
             self.debug_print(f"Sent Packet: " + message)
         else:
@@ -118,28 +117,14 @@ class functions:
 
         self.field = Field.Field(self.cubesat,self.debug)
         self.field.Beacon(lora_beacon)
-#         if self.cubesat.f_fsk:
-#             self.cubesat.radio1.cw(lora_beacon)
+        if self.cubesat.f_fsk:
+            self.cubesat.radio1.cw(lora_beacon)
         del self.field
         del Field
     
     def joke(self):
         self.send(random.choice(self.jokes))
-        
-    def format_state_of_health(self, hardware):
-        to_return = ""
-        for key, value in hardware.items():
-            to_return = to_return + key + "="
-            if value:
-                to_return += "1"
-            else:
-                to_return += "0"
-
-            if len(to_return) > 245:
-                return to_return
-
-        return to_return
-        
+    
 
     def state_of_health(self):
         import Field
@@ -167,62 +152,37 @@ class functions:
         
         self.field = Field.Field(self.cubesat,self.debug)
         if not self.state_bool:
-            self.field.Beacon(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.format_state_of_health(self.cubesat.hardware))+ f"{self.callsign}")
-#             if self.cubesat.f_fsk:
-#                 self.cubesat.radio1.cw(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
+            self.field.Beacon(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
+            if self.cubesat.f_fsk:
+                self.cubesat.radio1.cw(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
             self.state_bool=True
         else:
             self.field.Beacon(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
-#             if self.cubesat.f_fsk:
-#                 self.cubesat.radio1.cw(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
+            if self.cubesat.f_fsk:
+                self.cubesat.radio1.cw(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
             self.state_bool=False
         del self.field
         del Field
 
     def send_face(self):
-        """Calls the data transmit function from the field class"""
+        """Calls the data transmit function from the field class
+        """
         import Field
-        self.field = Field.Field(self.cubesat, self.debug)
-
-        try:
-            self.debug_print("Sending Face Data")
-            time.sleep(1)
-
-            # Debugging step: Check facestring content
-            if not hasattr(self, 'facestring') or not isinstance(self.facestring, list):
-                self.debug_print(f"[ERROR] self.facestring does not exist or is not a list: {self.facestring}")
-                return
-
-            if len(self.facestring) < 5:
-                self.debug_print(f"[ERROR] self.facestring has insufficient elements: {self.facestring}")
-                return  # Avoid indexing error
-
-            # Safe message construction
-            message = f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}'
-            self.debug_print(f"[DEBUG] Sending message: {message}")  # Debug message before sending
-            
-            self.field.Beacon(message)
-
-            if self.cubesat.f_fsk:
-                self.cubesat.radio1.cw(message)
-
-        except Exception as e:
-            self.debug_print(f"[ERROR] send_face failed: {e}")
-
-        finally:
-            del self.field
-            del Field
-
-
+        self.field = Field.Field(self.cubesat,self.debug)
+        self.debug_print("Sending Face Data")
+        self.field.Beacon(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
+        if self.cubesat.f_fsk:
+                self.cubesat.radio1.cw(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
+        del self.field
+        del Field
     
     def listen(self):
         import cdh
         #This just passes the message through. Maybe add more functionality later. 
         try:
             self.debug_print("Listening")
-            # Change timeout back to 10
             self.cubesat.radio1.receive_timeout=10
-            received = self.cubesat.radio1.receive_with_ack(keep_listening=True)
+            received = self.cubesat.radio1.receive(keep_listening=True)
         except Exception as e:
             self.debug_print("An Error has occured while listening: " + ''.join(traceback.format_exception(e)))
             received=None
@@ -270,43 +230,29 @@ class functions:
         elif face == "Face5": self.cubesat.Face0.duty_cycle = duty_cycle
     
     def all_face_data(self):
+        
         self.cubesat.all_faces_on()
         try:
             import Big_Data
-            a = Big_Data.AllFaces(self.debug, self.cubesat.tca)
-
-            self.debug_print("[DEBUG] Running Face_Test_All()...")
-            facestring_data = a.Face_Test_All()
-            self.debug_print(f"[DEBUG] Face_Test_All() returned: {facestring_data}")
-
-            # Validate facestring_data before assigning
-            if not isinstance(facestring_data, list):
-                self.debug_print(f"[ERROR] Face_Test_All() did not return a list! Value: {facestring_data}")
-                self.facestring = ["ERROR"] * 5  # Default fallback
-            elif len(facestring_data) < 5:
-                self.debug_print(f"[ERROR] Face_Test_All() returned too few elements: {facestring_data}")
-                self.facestring = facestring_data + ["MISSING"] * (5 - len(facestring_data))  # Pad list
-            else:
-                self.facestring = facestring_data  # Assign valid data
-
+            a = Big_Data.AllFaces(self.debug,self.cubesat.tca)
+            
+            self.facestring = a.Face_Test_All()
+            
             del a
             del Big_Data
-
         except Exception as e:
-            self.debug_print("[ERROR] Big_Data error: " + ''.join(traceback.format_exception(e)))
-            self.facestring = ["EXCEPTION"] * 5  # Prevent crash
-
+            self.debug_print("Big_Data error" + ''.join(traceback.format_exception(e)))
+        
         return self.facestring
-
     
     def get_imu_data(self):
         
         self.cubesat.all_faces_on()
         try:
             data=[]
-            data.append(self.cubesat.IMU.acceleration)
-            data.append(self.cubesat.IMU.gyro)
-            data.append(self.cubesat.magnetometer.magnetic)
+            data.append(self.cubesat.IMU.Acceleration)
+            data.append(self.cubesat.IMU.Gyroscope)
+            data.append(self.cubesat.IMU.Magnetometer)
         except Exception as e:
             self.debug_print("Error retrieving IMU data" + ''.join(traceback.format_exception(e)))
         
@@ -377,7 +323,7 @@ class functions:
             try:
                 import detumble
                 for _ in range(3):
-                    data=[self.cubesat.IMU.gyro,self.cubesat.IMU.Magnetometer]
+                    data=[self.cubesat.IMU.Gyroscope,self.cubesat.IMU.Magnetometer]
                     data[0]=list(data[0])
                     for x in range(3):
                         if data[0][x] < 0.01:

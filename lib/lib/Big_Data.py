@@ -184,54 +184,79 @@ class Face:
     #Function to test all sensors that should be on each face. 
     #Function takes number of tests "num" and polling rate in hz "rate"
     def test_all(self, num, rate): 
-        self.datalist = []
+        self.datalist=[]
         self.debug_print('Expected Sensors: ' + str(self.senlist_what))
         self.debug_print('Initialized Sensors: ' + str(self.active_sensors))
+        #time.sleep(1) #Remove later for performance boost! 
         self.debug_print('Initializing Test')
 
         for i in range(num): 
-            self.debug_print('Test Number: {}/{}'.format(i+1, num))
 
-            # Test Temperature Sensor
-            if ("MCP" in self.senlist) and (self.sensors.get("MCP")):
+            self.debug_print('Test Number: {}/{}'.format(i+1,num))
+
+            #Test Temperature Sensor
+            self.debug_print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            if ("MCP" in self.senlist) and (self.sensors.get("MCP") == True):
                 try:
-                    temp = self.temperature
-                    self.debug_print(f'[DEBUG] Temperature Data: {temp}')
-                    self.datalist.append(temp)
+                    self.debug_print('Temperature Sensor')
+                    self.debug_print('Face Temperature: {}C'.format(self.temperature))
+                    self.datalist.append(self.temperature)
                 except Exception as e:
-                    self.debug_print('[ERROR] Temperature Sensor Read Failed: ' + ''.join(traceback.format_exception(e)))
-                    self.datalist.append(None)
+                    self.debug_print('[ERROR][Temperature Sensor]' + ''.join(traceback.format_exception(e)))
             elif self.position == "z-":
                 pass
             else:
-                self.debug_print('[ERROR] Temperature Sensor Missing')
+                self.debug_print('[ERROR]Temperature Sensor Failure')
                 self.datalist.append(None)
-
-            # Test Light Sensor
-            if ("VEML" in self.senlist) and (self.sensors.get('VEML')): 
+                
+            self.debug_print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            #Test Light Sensor
+            if ("VEML" in self.senlist) and (self.sensors.get('VEML') == True ):
                 try:
-                    lux = self.lux_data
-                    self.debug_print(f'[DEBUG] Light Sensor Data: {lux}')
-                    self.datalist.append(lux)
-                except Exception as e:
-                    self.debug_print('[ERROR] Light Sensor Read Failed: ' + ''.join(traceback.format_exception(e)))
-                    self.datalist.append(None)
-
-            # Test Thermocouple
-            if ("COUPLE" in self.senlist) and (self.sensors.get('COUPLE')): 
+                    self.debug_print('Light Sensor')
+                    self.debug_print('Face light: {}Lumens/Sq.ft'.format(self.lux_data))
+                    self.datalist.append(self.lux_data)
+                except Exception as e: 
+                    self.debug_print('[ERROR][Light Sensor]' + ''.join(traceback.format_exception(e)))
+            elif self.position == "z-":
+                pass
+            else:
+                self.debug_print('[ERROR]Light Sensor Failure')
+                self.datalist.append(None)
+                
+            self.debug_print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      
+            #Test Motor Driver
+            if ("DRV" in self.senlist) and (self.sensors.get('DRV') == True ):
                 try:
-                    thermo = self.couple_data
-                    self.debug_print(f'[DEBUG] Thermocouple Data: {thermo}')
-                    self.datalist.append(thermo)
+                    self.debug_print('Motor Driver')
+                    self.debug_print('[ACTIVE][Motor Driver]') #No function defined here yet to use the driver
                 except Exception as e:
-                    self.debug_print('[ERROR] Thermocouple Read Failed: ' + ''.join(traceback.format_exception(e)))
-                    self.datalist.append(None)
+                    self.debug_print('[ERROR][Motor Driver]' + ''.join(traceback.format_exception(e)))
+                self.debug_print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~') 
+            else:
+                pass
 
-        if not self.datalist:
-            self.debug_print('[ERROR] test_all() collected no data!')
+            #Test Thermocouple
+            if ("COUPLE" in self.senlist) and (self.sensors.get('COUPLE') == True ):
+                try:
+                    self.debug_print('Thermocouple')
+                    self.debug_print('Battery Thermocouple: {}C'.format(self.couple_data)) #Unformatted
+                    self.datalist.append(self.couple_data)
+                except Exception as e:
+                    self.debug_print('[ERROR][Thermocouple]' + ''.join(traceback.format_exception(e)))
+                self.debug_print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~') 
+            elif self.position == "z-":
+                self.debug_print('[ERROR]Thermocouple Failure')
+                self.datalist.append(None)
+            else:
+                pass
 
+            self.debug_print('=======================================')
+            #time.sleep(rate) #Remove later for performance boost! 
         return self.datalist
-
+    def __del__(self):
+        self.debug_print("Object Destroyed!")
 
 class AllFaces:
     def debug_print(self,statement):
@@ -319,7 +344,7 @@ class AllFaces:
     #Function that polls all of the sensors on all of the faces one time and prints the results. 
     def Face_Test_All(self):
         try:
-            self.BigFaceList = []
+            self.BigFaceList=[]
             self.debug_print("Creating Face List")
             self.BigFaceList.append(self.Face0.test_all(1,.1))
             self.BigFaceList.append(self.Face1.test_all(1,.1))
@@ -332,9 +357,7 @@ class AllFaces:
 
         except Exception as e:
             self.debug_print('All Face test error:' + ''.join(traceback.format_exception(e)))
-
         return self.BigFaceList
-
     
     
     def Get_Thermo_Data(self):

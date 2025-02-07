@@ -180,40 +180,16 @@ class functions:
         del Field
 
     def send_face(self):
-        """Calls the data transmit function from the field class"""
+        """Calls the data transmit function from the field class
+        """
         import Field
-        self.field = Field.Field(self.cubesat, self.debug)
-
-        try:
-            self.debug_print("Sending Face Data")
-            time.sleep(1)
-
-            # Debugging step: Check facestring content
-            if not hasattr(self, 'facestring') or not isinstance(self.facestring, list):
-                self.debug_print(f"[ERROR] self.facestring does not exist or is not a list: {self.facestring}")
-                return
-
-            if len(self.facestring) < 5:
-                self.debug_print(f"[ERROR] self.facestring has insufficient elements: {self.facestring}")
-                return  # Avoid indexing error
-
-            # Safe message construction
-            message = f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}'
-            self.debug_print(f"[DEBUG] Sending message: {message}")  # Debug message before sending
-            
-            self.field.Beacon(message)
-
-            if self.cubesat.f_fsk:
-                self.cubesat.radio1.cw(message)
-
-        except Exception as e:
-            self.debug_print(f"[ERROR] send_face failed: {e}")
-
-        finally:
-            del self.field
-            del Field
-
-
+        self.field = Field.Field(self.cubesat,self.debug)
+        self.debug_print("Sending Face Data")
+        self.field.Beacon(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
+        if self.cubesat.f_fsk:
+                self.cubesat.radio1.cw(f'{self.callsign} Y-: {self.facestring[0]} Y+: {self.facestring[1]} X-: {self.facestring[2]} X+: {self.facestring[3]}  Z-: {self.facestring[4]} {self.callsign}')
+        del self.field
+        del Field
     
     def listen(self):
         import cdh
@@ -270,34 +246,20 @@ class functions:
         elif face == "Face5": self.cubesat.Face0.duty_cycle = duty_cycle
     
     def all_face_data(self):
+        
         self.cubesat.all_faces_on()
         try:
             import Big_Data
-            a = Big_Data.AllFaces(self.debug, self.cubesat.tca)
-
-            self.debug_print("[DEBUG] Running Face_Test_All()...")
-            facestring_data = a.Face_Test_All()
-            self.debug_print(f"[DEBUG] Face_Test_All() returned: {facestring_data}")
-
-            # Validate facestring_data before assigning
-            if not isinstance(facestring_data, list):
-                self.debug_print(f"[ERROR] Face_Test_All() did not return a list! Value: {facestring_data}")
-                self.facestring = ["ERROR"] * 5  # Default fallback
-            elif len(facestring_data) < 5:
-                self.debug_print(f"[ERROR] Face_Test_All() returned too few elements: {facestring_data}")
-                self.facestring = facestring_data + ["MISSING"] * (5 - len(facestring_data))  # Pad list
-            else:
-                self.facestring = facestring_data  # Assign valid data
-
+            a = Big_Data.AllFaces(self.debug,self.cubesat.tca)
+            
+            self.facestring = a.Face_Test_All()
+            
             del a
             del Big_Data
-
         except Exception as e:
-            self.debug_print("[ERROR] Big_Data error: " + ''.join(traceback.format_exception(e)))
-            self.facestring = ["EXCEPTION"] * 5  # Prevent crash
-
+            self.debug_print("Big_Data error" + ''.join(traceback.format_exception(e)))
+        
         return self.facestring
-
     
     def get_imu_data(self):
         
