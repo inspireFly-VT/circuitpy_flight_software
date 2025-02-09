@@ -27,8 +27,9 @@ try:
 
     #power cycle faces to ensure sensors are on:
     debug_print("Cycling Faces Off")
-#     c.all_faces_off()
+    c.all_faces_off()
     time.sleep(1)
+    debug_print("Cycling Faces On")
     c.all_faces_on()
     #test the battery:
     c.battery_manager()
@@ -104,7 +105,7 @@ try:
     f.listen()
 
     c.battery_manager()
-    #f.battery_heater()
+#     f.battery_heater()
     c.battery_manager() #Second check to make sure we have enough power to continue
 
     f.beacon()
@@ -115,7 +116,7 @@ except Exception as e:
     debug_print("Error in Boot Sequence: " + ''.join(traceback.format_exception(e)))
 finally:
     debug_print("All Faces off!")
-#     c.all_faces_off()
+    c.all_faces_off()
 
 def critical_power_operations():
     f.beacon()
@@ -142,9 +143,10 @@ def normal_power_operations():
     def check_power():
         gc.collect()
         c.battery_manager()
-        #f.battery_heater()
+#         f.battery_heater()
         c.check_reboot()
         c.battery_manager() #Second check to make sure we have enough power to continue
+        
         
         if c.power_mode == 'normal' or c.power_mode == 'maximum': 
             pwr = True
@@ -177,6 +179,8 @@ def normal_power_operations():
             try:
                 debug_print("Getting face data...")
                 FaceData = f.all_face_data()
+#                 #Fabricated Face Data for Debugging Purposes
+#                 FaceData = [500, 600, 700, 800, 900, 400]
                 debug_print(f"[DEBUG] FaceData received: {FaceData}")
 
                 if len(FaceData) < 5:
@@ -196,7 +200,7 @@ def normal_power_operations():
     
     async def s_face_data():
 
-#         await asyncio.sleep(20)
+        await asyncio.sleep(20)
 
         while check_power():
             try:
@@ -303,26 +307,27 @@ def normal_power_operations():
                 print("Wrong command entered, try again.")
             
             gc.collect()
-            await asyncio.sleep(600)
+#             await asyncio.sleep(600)
 
     async def main_loop():
 #         log_face_data_task = asyncio.create_task(l_face_data())
             
         t1 = asyncio.create_task(s_lora_beacon())
-        t2 = asyncio.create_task(s_face_data())
+#         t2 = asyncio.create_task(s_face_data())
         t3 = asyncio.create_task(s_imu_data())
-        t4 = asyncio.create_task(g_face_data())
+#         t4 = asyncio.create_task(g_face_data())
         t5 = asyncio.create_task(detumble())
 #         t6 = asyncio.create_task(joke())
         t7 = asyncio.create_task(pcb_comms())
         
-        await asyncio.gather(t1,t2,t3,t4,t5,t7)
+        await asyncio.gather(t1,t3,t5,t7)
         
     asyncio.run(main_loop())
 
 
 ######################### MAIN LOOP ##############################
 try:
+    debug_print("Cycling Faces On")
     c.all_faces_on()
     while True:
         #L0 automatic tasks no matter the battery level
@@ -354,5 +359,5 @@ except Exception as e:
     microcontroller.reset()
 finally:
     debug_print("All Faces off!")
-#     c.all_faces_off()
+    c.all_faces_off()
     c.RGB=(0,0,0)

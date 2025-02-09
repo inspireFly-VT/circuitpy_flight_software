@@ -253,7 +253,7 @@ class functions:
             a = Big_Data.AllFaces(self.debug,self.cubesat.tca)
             
             self.facestring = a.Face_Test_All()
-            
+            self.debug_print("Face String: " + self.facestring)
             del a
             del Big_Data
         except Exception as e:
