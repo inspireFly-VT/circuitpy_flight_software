@@ -113,10 +113,11 @@ try:
 except Exception as e:
     debug_print("Error in Boot Sequence: " + ''.join(traceback.format_exception(e)))
 finally:
-    #debug_print("All Faces off!")
+    debug_print("All Faces off!")
     #c.all_faces_off()
 
 def critical_power_operations():
+    
     f.beacon()
     f.listen()
     f.state_of_health()
@@ -262,43 +263,46 @@ def normal_power_operations():
     
     async def pcb_comms():                
         debug_print("Yapping to the PCB now - D")
-        
-        #await asyncio.sleep(600)
+
+        await asyncio.sleep(30)  # Initial delay before starting communication
+
         # Initialize communication and FCBCommunicator
         com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
         com1.start()
         fcb_comm = FCBCommunicator(com1)
 
-        # Start interaction loop
-        while True:
-            overhead_command = com1.overhead_read()
+        while True:  # Keep running as part of normal operations
+            debug_print("Starting new PCB communication cycle")
 
-            # Set the command
-            command = 'chunk'
-            time.sleep(2)
+            try:
+                overhead_command = com1.overhead_read()
 
-            if command.lower() == 'chunk':
-                fcb_comm.send_command("chunk")
-                
-                if fcb_comm.wait_for_acknowledgment():
-                    time.sleep(1)
-                    jpg_bytes = fcb_comm.send_chunk_request()
-                    
-                    if jpg_bytes is not None:
-                        fcb_comm.save_image(jpg_bytes)
-                        
-            command = 'end'
-            
-            if command.lower() == 'end':
-                fcb_comm.end_communication()
-                time.sleep(3)
-                break
+                # Set the command
+                command = 'chunk'
+                await asyncio.sleep(2)
 
-            else:
-                print("Wrong command entered, try again.")
-            
+                if command.lower() == 'chunk':
+                    fcb_comm.send_command("chunk")
+
+                    if fcb_comm.wait_for_acknowledgment():
+                        await asyncio.sleep(1)
+                        jpg_bytes = fcb_comm.send_chunk_request()
+
+                        if jpg_bytes is not None:
+                            fcb_comm.save_image(jpg_bytes)
+
+                command = 'end'
+
+                if command.lower() == 'end':
+                    fcb_comm.end_communication()
+                    await asyncio.sleep(3)
+
+            except Exception as e:
+                debug_print(f"Error in PCB communication: {''.join(traceback.format_exception(e))}")
+
             gc.collect()
-            await asyncio.sleep(600)
+            await asyncio.sleep(100)  # Delay before the next PCB communication cycle
+
 
     async def main_loop():
         #log_face_data_task = asyncio.create_task(l_face_data())
