@@ -34,10 +34,10 @@ class FCBCommunicator:
             time.sleep(1)
 
     def send_chunk_request(self, lowerchunk='0', upperchunk=self.overhead_read()):
-#         if lowerchunk.isdigit() and upperchunk.isdigit() and int(lowerchunk) <= int(upperchunk):
-#             message = f"{lowerchunk} {upperchunk}"
-#             self.send_command(message)
-#             print(message)
+        if lowerchunk.isdigit() and upperchunk.isdigit() and int(lowerchunk) <= int(upperchunk):
+            message = f"{lowerchunk} {upperchunk}"
+            self.send_command(message)
+            print(message)
             
             jpg_bytes, count = self.com.read_bytes(lowerchunk, upperchunk)
             print('Number of chunks received = ', count)
