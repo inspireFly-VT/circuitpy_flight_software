@@ -123,11 +123,7 @@ class functions:
         del Field
     
     def joke(self):
-        #self.send(random.choice(self.jokes))
-        joke = random.choice(self.jokes)
-        payload = bytearray([0x20])
-        payload.extend(joke.encode(encoding="utf-8")
-        return payload
+        self.send(random.choice(self.jokes))
     
 
     def state_of_health(self):
