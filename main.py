@@ -16,11 +16,34 @@ from debugcolor import co
 from easy_comms_circuit import EasyComms
 import board
 from FCB_class import FCBCommunicator
-from lib import rfm9xfsk
+#from lib import rfm9xfsk
+import sdcardio
+import storage
+import busio
+import microcontroller
+import board
+# 
+# spi = busio.SPI(board.SPI0_SCK, board.SPI0_MOSI, board.SPI0_MISO)
+# sd = sdcardio.SDCard(spi, board.SPI0_CS1)
+# vfs = storage.VfsFat(sd)
+# storage.mount(vfs, "/sd")
+
+f=functions.functions(c)
+
+# inspireFly Test Mode Loop !!!
+runOnce = True
+# while True:
+#     if runOnce:
+#         print("You are in inspireFly test mode. Comment this while loop out on line 34 in main")
+#         c.all_faces_on()
+#         runOnce = False
+#     f.listen()
+    
+
 def debug_print(statement):
     if c.debug:
         print(co("[MAIN]" + str(statement), 'blue', 'bold'))
-f=functions.functions(c)
+
 try:
     debug_print("Boot number: " + str(c.c_boot))
     debug_print(str(gc.mem_free()) + " Bytes remaining")
@@ -261,23 +284,21 @@ def normal_power_operations():
             gc.collect()
             await asyncio.sleep(500)
     
-    async def pcb_comms():                
+
+    async def pcb_comms():
         debug_print("Yapping to the PCB now - D")
 
         await asyncio.sleep(30)  # Initial delay before starting communication
 
-        # Initialize communication and FCBCommunicator
         com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
         com1.start()
         fcb_comm = FCBCommunicator(com1)
 
-        while True:  # Keep running as part of normal operations
+        while True:
             debug_print("Starting new PCB communication cycle")
 
             try:
                 overhead_command = com1.overhead_read()
-
-                # Set the command
                 command = 'chunk'
                 await asyncio.sleep(2)
 
@@ -286,22 +307,28 @@ def normal_power_operations():
 
                     if fcb_comm.wait_for_acknowledgment():
                         await asyncio.sleep(1)
-                        jpg_bytes = fcb_comm.send_chunk_request()
 
-                        if jpg_bytes is not None:
-                            fcb_comm.save_image(jpg_bytes)
+                        # Ensure we can open the file on SD card
+                        img_file_path = "/sd/image.jpg"
+                        try:
+                            with open(img_file_path, "wb") as img_file:  # Open file on SD card
+                                while True:
+                                    jpg_bytes = fcb_comm.send_chunk_request()
 
-                command = 'end'
+                                    if jpg_bytes is None:
+                                        break  # Exit if no more data
 
-                if command.lower() == 'end':
-                    fcb_comm.end_communication()
-                    await asyncio.sleep(3)
+                                    img_file.write(jpg_bytes)  # Write each chunk immediately
+                                    debug_print(f"Saved chunk of {len(jpg_bytes)} bytes")
+                        except IOError as e:
+                            debug_print(f"Error writing to SD card: {str(e)}")
+                            continue  # Continue to next communication cycle if SD card is full or unavailable
 
             except Exception as e:
                 debug_print(f"Error in PCB communication: {''.join(traceback.format_exception(e))}")
 
             gc.collect()
-            await asyncio.sleep(100)  # Delay before the next PCB communication cycle
+            await asyncio.sleep(500)
 
 
     async def main_loop():
