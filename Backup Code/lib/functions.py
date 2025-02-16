@@ -136,29 +136,29 @@ class functions:
         #list of state information 
         try:
             self.state_list = [
-                f"PM:{self.cubesat.power_mode}",
-                f"VB:{self.cubesat.battery_voltage}",
-                f"ID:{self.cubesat.current_draw}",
-                f"IC:{self.cubesat.charge_current}",
-                f"VS:{self.cubesat.system_voltage}",
-                f"UT:{self.cubesat.uptime}",
-                f"BN:{self.cubesat.c_boot}",
-                f"MT:{self.cubesat.micro.cpu.temperature}",
-                f"RT:{self.cubesat.radio1.former_temperature}",
-                f"AT:{self.cubesat.internal_temperature}",
-                f"BT:{self.last_battery_temp}",
-                f"AB:{int(self.cubesat.burned)}",
-                f"BO:{int(self.cubesat.f_brownout)}",
-                f"FK:{int(self.cubesat.f_fsk)}"
+                {"PM":{self.cubesat.power_mode}},
+                {"VB":{self.cubesat.battery_voltage}},
+                {"ID":{self.cubesat.current_draw}},
+                {"IC":{self.cubesat.charge_current}},
+                {"VS":{self.cubesat.system_voltage}},
+                {"UT":{self.cubesat.uptime}},
+                {"BN":{self.cubesat.c_boot}},
+                {"MT":{self.cubesat.micro.cpu.temperature}},
+                {"RT":{self.cubesat.radio1.former_temperature}},
+                {"AT":{self.cubesat.internal_temperature}},
+                {"BT":{self.last_battery_temp}},
+                {"AB":{int(self.cubesat.burned)}},
+                {"BO":{int(self.cubesat.f_brownout)}},
+                {"FK":{int(self.cubesat.f_fsk)}}
             ]
         except Exception as e:
             self.debug_print("Couldn't aquire data for the state of health: " + ''.join(traceback.format_exception(e)))
         
         self.field = Field.Field(self.cubesat,self.debug)
         if not self.state_bool:
-            self.field.Beacon(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
+            self.field.Beacon(f"{self.callsign} Yearling^2 State of Health 1/2" + str(key + ": " + value for key, value in self.state_list.items())+ f"{self.callsign}")
             if self.cubesat.f_fsk:
-                self.cubesat.radio1.cw(f"{self.callsign} Yearling^2 State of Health 1/2" + str(self.state_list)+ f"{self.callsign}")
+                self.cubesat.radio1.cw(f"{self.callsign} Yearling^2 State of Health 1/2" + str(key + ": " + value for key, value in self.state_list.items()) + f"{self.callsign}")
             self.state_bool=True
         else:
             self.field.Beacon(f"{self.callsign} YSOH 2/2" + str(self.cubesat.hardware) +f"{self.callsign}")
@@ -167,6 +167,14 @@ class functions:
             self.state_bool=False
         del self.field
         del Field
+
+        
+        payload = bytearray([0x25])
+
+        for key, value in self.state_list.items():
+            payload.extend(str(value).encode(encoding="utf-8"))
+        
+        return payload
 
     def send_face(self):
         """Calls the data transmit function from the field class
