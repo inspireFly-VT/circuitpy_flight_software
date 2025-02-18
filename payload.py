@@ -9,7 +9,8 @@ import board
 import busio
 import traceback
 from debugcolor import co
-import adafruit_bno055
+#import adafruit_bno055
+#import adafruit_bno08x.i2c
 
 class PAYLOAD:
     def debug_print(self,statement):

@@ -1,5 +1,7 @@
 import time
 import random
+import functions
+import traceback
 
 # our 4 byte code to authorize commands
 # pass-code for DEMO PURPOSES ONLY
@@ -91,7 +93,7 @@ def hreset(cubesat):
     print('Resetting')
     try:
         cubesat.radio1.send(data=b'resetting')
-        cubesat.micro.on_next_reset(self.cubesat.micro.RunMode.NORMAL)
+        cubesat.micro.on_next_reset(cubesat.micro.RunMode.NORMAL)
         cubesat.micro.reset()
     except:
         pass
@@ -103,6 +105,30 @@ def joke_reply(cubesat):
     joke=random.choice(jokereply)
     print(joke)
     cubesat.radio1.send(joke)
+    
+def send_soh(cubesat):
+    f=functions.functions(cubesat)
+    try:
+        state_list = [
+            f"PM:{cubesat.power_mode}",
+            f"VB:{cubesat.battery_voltage}",
+            f"ID:{cubesat.current_draw}",
+            f"IC:{cubesat.charge_current}",
+            f"VS:{cubesat.system_voltage}",
+            f"UT:{cubesat.uptime}",
+            f"BN:{cubesat.c_boot}",
+            f"MT:{cubesat.micro.cpu.temperature}",
+            f"RT:{cubesat.radio1.former_temperature}",
+            f"AT:{cubesat.internal_temperature}",
+            f"BT:{f.last_battery_temp}",
+            f"AB:{int(cubesat.burned)}",
+            f"BO:{int(cubesat.f_brownout)}",
+            f"FK:{int(cubesat.f_fsk)}"
+        ]
+    except Exception as e:
+        cubesat.radio1.send(f.debug_print("Couldn't aquire data for the state of health: " + ''.join(traceback.format_exception(e))))
+    print(cubesat.radio1.send(state_list))
+
 
 ########### commands with arguments ###########
 
