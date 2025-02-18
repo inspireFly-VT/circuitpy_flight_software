@@ -8,7 +8,7 @@ import busio
 import storage
 
 # Initialize communication
-com1 = EasyComms(board.GP0, board.GP1, baud_rate=115200)
+com1 = EasyComms(board.TX, board.RX, baud_rate=115200)
 com1.start()
 received_bytes = b""
 
@@ -42,7 +42,7 @@ while True:
         request = "chunk"
         com1.overhead_send(request)  # tell b you are requesting for chunks
         lowerchunk = '0'#input('Chunk lower bound: ')  # input lower bound
-        upperchunk = '128'#input('Chunk upper bound: ')  # input upper bound
+        upperchunk = '10'#input('Chunk upper bound: ')  # input upper bound
         time.sleep(2)
         if lowerchunk.isdigit() and upperchunk.isdigit() and int(lowerchunk) <= int(upperchunk):
             message = lowerchunk + ' ' + upperchunk  # compile lower and upper bounds in message to send

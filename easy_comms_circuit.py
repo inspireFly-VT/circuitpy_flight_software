@@ -48,7 +48,7 @@ class EasyComms:
         
         # Collect Chunks
         for i in range(int(lowerchunk), int(upperchunk) + 1):
-            time.sleep(1)  # Wait for bytes
+            time.sleep(2)  # Wait for bytes
             if self.uart.in_waiting > 0:  # Check if there are bytes to read
                 data = self.uart.read(chunksize)
                 print("Data", data)

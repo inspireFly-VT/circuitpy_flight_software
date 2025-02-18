@@ -1,7 +1,5 @@
 import time
 import random
-import functions
-import traceback
 
 # our 4 byte code to authorize commands
 # pass-code for DEMO PURPOSES ONLY
@@ -10,15 +8,36 @@ jokereply=["Your Mom","Your Mum","Your Face","not True lol","I have brought peac
 # pass-code for DEMO PURPOSES ONLY
 super_secret_code = b'' #put your own code here
 print(f"Super secret code is: {super_secret_code}")
+
+# Bronco's commands
+# commands = {
+#     b'\x8eb':    'noop',
+#     b'\xd4\x9f': 'hreset',   # new
+#     b'\x12\x06': 'shutdown',
+#     b'8\x93':    'query',    # new
+#     b'\x96\xa2': 'exec_cmd',
+#     b'\xa5\xb4': 'joke_reply',
+#     b'\x56\xc4': 'FSK'
+# }
+
+# inspireFly commands
 commands = {
-    b'\x8eb':    'noop',
-    b'\xd4\x9f': 'hreset',   # new
-    b'\x12\x06': 'shutdown',
-    b'8\x93':    'query',    # new
-    b'\x96\xa2': 'exec_cmd',
-    b'\xa5\xb4': 'joke_reply',
-    b'\x56\xc4': 'FSK'
+    b'\x10':    'noop',
+    b'\x11': 'hreset',   # new
+    b'\x12': 'shutdown',
+    b'\x13':    'query',    # new
+    #b'\x14': 'exec_cmd',   # not getting implemented
+    b'\x15': 'joke_reply',
+    b'\x16': 'send_SOH',
+    b'\x31': 'take_pic',
+    b'\x32': 'send_pic',
+    b'\x34': 'receive_pic',
+    b'\x1C': 'mag_on',
+    b'\x1D': 'mag_off',
+    b'\x1E': 'burn_on',
+    b'\x1F': 'heat_on',
 }
+
 ############### hot start helper ###############
 def hotstart_handler(cubesat,msg):
     # try
@@ -40,6 +59,14 @@ def hotstart_handler(cubesat,msg):
 
 ############### message handler ###############
 def message_handler(cubesat,msg):
+    
+    
+    # inspireFly - this code should eventually be swapped out with our own command processor which will pull
+    # out the important data such as the command
+    
+    
+    
+    
     multi_msg=False
     if len(msg) >= 10: # [RH header 4 bytes] [pass-code(4 bytes)] [cmd 2 bytes]
         if bytes(msg[4:8])==super_secret_code:
@@ -85,6 +112,19 @@ def message_handler(cubesat,msg):
 
 
 ########### commands without arguments ###########
+
+def take_pic(cubesat):
+    #TO-DO
+    return
+
+def send_pic(cubesat):
+    #TO-DO
+    return
+
+def send_SOH(cubesat):
+    #TO-DO
+    return
+
 def noop(cubesat):
     print('no-op')
     pass
@@ -93,7 +133,7 @@ def hreset(cubesat):
     print('Resetting')
     try:
         cubesat.radio1.send(data=b'resetting')
-        cubesat.micro.on_next_reset(cubesat.micro.RunMode.NORMAL)
+        cubesat.micro.on_next_reset(self.cubesat.micro.RunMode.NORMAL)
         cubesat.micro.reset()
     except:
         pass
@@ -105,30 +145,6 @@ def joke_reply(cubesat):
     joke=random.choice(jokereply)
     print(joke)
     cubesat.radio1.send(joke)
-    
-def send_soh(cubesat):
-    f=functions.functions(cubesat)
-    try:
-        state_list = [
-            f"PM:{cubesat.power_mode}",
-            f"VB:{cubesat.battery_voltage}",
-            f"ID:{cubesat.current_draw}",
-            f"IC:{cubesat.charge_current}",
-            f"VS:{cubesat.system_voltage}",
-            f"UT:{cubesat.uptime}",
-            f"BN:{cubesat.c_boot}",
-            f"MT:{cubesat.micro.cpu.temperature}",
-            f"RT:{cubesat.radio1.former_temperature}",
-            f"AT:{cubesat.internal_temperature}",
-            f"BT:{f.last_battery_temp}",
-            f"AB:{int(cubesat.burned)}",
-            f"BO:{int(cubesat.f_brownout)}",
-            f"FK:{int(cubesat.f_fsk)}"
-        ]
-    except Exception as e:
-        cubesat.radio1.send(f.debug_print("Couldn't aquire data for the state of health: " + ''.join(traceback.format_exception(e))))
-    print(cubesat.radio1.send(state_list))
-
 
 ########### commands with arguments ###########
 
