@@ -13,6 +13,23 @@ from debugcolor import co
 
 class functions:
 
+    
+    # INSPIREFLY FUNCTIONS:
+    
+    def AX_25Wrapper(self, message):
+        #TO-DO
+        return
+        
+        
+
+    def TransmitMessage(self, message):
+        #TO-DO
+        return
+        
+        
+
+
+
     def debug_print(self,statement):
         if self.debug:
             print(co("[Functions]" + str(statement), 'green', 'bold'))
@@ -214,6 +231,13 @@ class functions:
             del Field
 
 
+    def inspireFlyListeningFunction(self):
+        import cdh
+        self.debug_print("Listening")
+        
+        self.cubesat.radio1.receive_timeout=10
+        received = self.cubesat.radio1.receive_with_ack(keep_listening=True)
+    
     
     def listen(self):
         import cdh
@@ -421,4 +445,10 @@ class functions:
         self.cubesat.all_faces_on()
         self.cubesat.enable_rf.value=True
         return True
+    
+    def inspireFlysBeaconTestingMethod(self, msg):
+        import Field
+        self.field = Field.Field(self.cubesat,self.debug)
+        message=str(msg)
+        self.field.inspireFlysBeaconTestingFunction(message)
     
