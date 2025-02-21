@@ -16,44 +16,17 @@ from debugcolor import co
 from easy_comms_circuit import EasyComms
 import board
 from FCB_class import FCBCommunicator
-#from lib import rfm9xfsk
-import sdcardio
-import storage
-import busio
-import microcontroller
-import board
-# 
-# spi = busio.SPI(board.SPI0_SCK, board.SPI0_MOSI, board.SPI0_MISO)
-# sd = sdcardio.SDCard(spi, board.SPI0_CS1)
-# vfs = storage.VfsFat(sd)
-# storage.mount(vfs, "/sd")
-
-f=functions.functions(c)
-
-# inspireFly Test Mode Loop !!!
-runOnce = True
-while True:
-    if runOnce:
-        print("You are in inspireFly test mode. Comment this while loop out on line 34 in main")
-        c.all_faces_on()
-        runOnce = False
-        f.TransmitImageTest()
-    #f.listen()
-    #f.send(0xFF)
-    print("Done")
-    
-    
-
+from lib import rfm9xfsk
 def debug_print(statement):
     if c.debug:
         print(co("[MAIN]" + str(statement), 'blue', 'bold'))
-
+f=functions.functions(c)
 try:
     debug_print("Boot number: " + str(c.c_boot))
     debug_print(str(gc.mem_free()) + " Bytes remaining")
 
     #power cycle faces to ensure sensors are on:
-    #c.all_faces_off()
+    c.all_faces_off()
     time.sleep(1)
     c.all_faces_on()
     #test the battery:
@@ -130,7 +103,7 @@ try:
     f.listen()
 
     c.battery_manager()
-    #f.battery_heater()
+    f.battery_heater()
     c.battery_manager() #Second check to make sure we have enough power to continue
 
     f.beacon()
@@ -141,10 +114,9 @@ except Exception as e:
     debug_print("Error in Boot Sequence: " + ''.join(traceback.format_exception(e)))
 finally:
     debug_print("All Faces off!")
-    #c.all_faces_off()
+    c.all_faces_off()
 
 def critical_power_operations():
-    
     f.beacon()
     f.listen()
     f.state_of_health()
@@ -169,7 +141,7 @@ def normal_power_operations():
     def check_power():
         gc.collect()
         c.battery_manager()
-        #f.battery_heater()
+        f.battery_heater()
         c.check_reboot()
         c.battery_manager() #Second check to make sure we have enough power to continue
         
@@ -288,78 +260,44 @@ def normal_power_operations():
             gc.collect()
             await asyncio.sleep(500)
     
-
-    async def pcb_comms():
+    async def pcb_comms():                
         debug_print("Yapping to the PCB now - D")
+        
+        #await asyncio.sleep(600)
+        # Initialize communication and FCBCommunicator
+        com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
+        com1.start()
+        fcb_comm = FCBCommunicator(com1)
 
-        await asyncio.sleep(30)  # Initial delay before starting communication
-
+        # Start interaction loop
         while True:
-            debug_print("Starting new PCB communication cycle")
+            overhead_command = com1.overhead_read()
 
-            # Initial garbage collection to free memory before anything starts
+            # Set the command
+            command = 'chunk'
+            time.sleep(2)
+
+            if command.lower() == 'chunk':
+                fcb_comm.send_command("chunk")
+                
+                if fcb_comm.wait_for_acknowledgment():
+                    jpg_bytes = fcb_comm.send_chunk_request()
+                    
+                    if jpg_bytes is not None:
+                        fcb_comm.save_image(jpg_bytes)
+                        
+            command = 'end'
+            
+            if command.lower() == 'end':
+                fcb_comm.end_communication()
+                time.sleep(3)
+                break
+
+            else:
+                print("Wrong command entered, try again.")
+            
             gc.collect()
-            debug_print(f"Free memory before cycle: {gc.mem_free()} bytes")
-
-            try:
-                # Reinitialize com1 and fcb_comm each cycle to prevent memory issues
-                com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
-                com1.start()
-                fcb_comm = FCBCommunicator(com1)
-
-                overhead_command = com1.overhead_read()
-                command = 'chunk'
-                await asyncio.sleep(2)
-
-                if command.lower() == 'chunk':
-                    fcb_comm.send_command("chunk")
-
-                    if fcb_comm.wait_for_acknowledgment():
-                        await asyncio.sleep(1)
-
-                        # Perform garbage collection before data transfer
-                        gc.collect()
-                        debug_print(f"Free memory before data transfer: {gc.mem_free()} bytes")
-
-                        img_file_path = "/sd/image.jpg"
-                        try:
-                            with open(img_file_path, "wb") as img_file:
-                                while True:
-                                    jpg_bytes = fcb_comm.send_chunk_request()
-
-                                    if jpg_bytes is None:
-                                        break  # Exit if no more data
-
-                                    img_file.write(jpg_bytes)  # Write each chunk immediately
-                                    debug_print(f"Saved chunk of {len(jpg_bytes)} bytes")
-
-                                    # Free memory by explicitly deleting jpg_bytes
-                                    del jpg_bytes
-                                    jpg_bytes = None
-                                    gc.collect()
-
-                            # Explicitly delete file reference
-                            del img_file
-                            img_file = None
-                            gc.collect()
-
-                        except IOError as e:
-                            debug_print(f"Error writing to SD card: {str(e)}")
-                            continue  # Continue to next cycle if SD card is full or unavailable
-
-            except Exception as e:
-                debug_print(f"Error in PCB communication: {''.join(traceback.format_exception(e))}")
-
-            # Cleanup and reinitialize before next cycle
-            del com1, fcb_comm
-            com1 = None
-            fcb_comm = None
-            gc.collect()
-
-            debug_print(f"Free memory after cleanup: {gc.mem_free()} bytes")
-
-            await asyncio.sleep(500)  # Delay before next cycle
-
+            await asyncio.sleep(600)
 
     async def main_loop():
         #log_face_data_task = asyncio.create_task(l_face_data())
@@ -409,6 +347,6 @@ except Exception as e:
     microcontroller.on_next_reset(microcontroller.RunMode.NORMAL)
     microcontroller.reset()
 finally:
-    #debug_print("All Faces off!")
-    #c.all_faces_off()
+    debug_print("All Faces off!")
+    c.all_faces_off()
     c.RGB=(0,0,0)

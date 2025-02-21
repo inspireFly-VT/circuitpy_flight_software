@@ -37,6 +37,7 @@ class Field():
                 num = 0
                 while num is not 10:
                     self.cubesat.radio1.send(bytes(msg,"UTF_8"))
+                    self.cubesat.radio1.send(bytes("test" + str(num), "UTF-8"))
                     num = num + 1
                 print(
                     "Message Success: "
@@ -46,10 +47,6 @@ class Field():
                 self.debug_print("Please toggle licensed variable in code once you obtain an ameteur radio license")
         except Exception as e:
             self.debug_print("Tried Beaconing but encountered error: ".join(traceback.format_exception(e)))
-            
-    def inspireFlysBeaconTestingFunction(self, msg):
-        self.cubesat.radio1.send(bytes(msg, "UTF_8"))
-        self.debug_print("Sent: " + str(bytes(msg, "UTF_8")))
 
     def troubleshooting(self):
         # this is for troubleshooting comms
