@@ -375,14 +375,24 @@ class RFM9x:
         time.sleep(0.01)
         self.long_range_mode=False # FSK/OOK Mode
         self.modulation_type=0 # FSK
+        
+        # could potentially be 1, originally was 2
         self.modulation_shaping = 2
+        
         self._write_u8(0x25,0x00) # no preamble
         self._write_u8(0x26,0x00) # no preamble
         self._write_u8(0x27,0x00) # no sync word
         self._write_u8(0x3f,10)   # clear FIFO
+        
+#       self._write_u8(0x02,0x0D) # BitRate(15:8)
+#       self._write_u8(0x03,0x05) # BitRate (7:0)  Note: Bronco had it as BitRate(15:8)
         self._write_u8(0x02,0xFF) # BitRate(15:8)
-        self._write_u8(0x03,0xFF) # BitRate(15:8)
-        self._write_u8(0x05,11)   # Freq deviation Lsb 600 Hz
+        self._write_u8(0x03,0xFF)
+        
+        
+        #self._write_u8(0x04,0x1A)   # Freq deviation Lsb 600 Hz
+        self._write_u8(0x05,0x0B)   # Freq deviation Lsb 600 Hz
+        
         self.idle()
         # Set payload length VR3X Morse length = 51
         self._write_u8(0x35,len(msg)-1)

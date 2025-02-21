@@ -37,7 +37,6 @@ class Field():
                 num = 0
                 while num is not 10:
                     self.cubesat.radio1.send(bytes(msg,"UTF_8"))
-                    self.cubesat.radio1.send(bytes("test" + str(num), "UTF-8"))
                     num = num + 1
                 print(
                     "Message Success: "

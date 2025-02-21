@@ -109,6 +109,9 @@ class Satellite:
         self.BOOTTIME= const(time.time())
         #self.BOOTTIME = 0
         self.debug_print(f'Boot time: {self.BOOTTIME}s')
+        
+        self.debug_print(f'Cubesat is being initialized')
+        
         self.CURRENTTIME=self.BOOTTIME
         self.UPTIME=0
         self.heating=False
@@ -391,9 +394,13 @@ class Satellite:
         try:
             #self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, board.SPI0_CS0, board.RF1_RST,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
             self.f_fsk = True
-            self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, _rf_cs1, _rf_rst1,self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
-            if self.f_fsk:
+            self.radio1 = pysquared_rfm9x.RFM9x(self.spi0, _rf_cs1, _rf_rst1, self.radio_cfg['freq'],code_rate=8,baudrate=1320000)
+            
+            self.debug_print("self.f_fsk status: ", self.f_fsk)
+            if False:
+                
                 self.radio1 = rfm9xfsk.RFM9xFSK(
+                    
                     self.spi0,
                     _rf_cs1,
                     _rf_rst1,
@@ -444,10 +451,10 @@ class Satellite:
         except Exception as e:
             self.debug_print('[ERROR][RADIO 1]' + ''.join(traceback.format_exception(e)))
         
-        num = 0
-        while num is not 10:
-            self.radio1.send(bytes("hi" + str(num),"utf-8"))
-            num = num + 1
+#         num = 0
+#         while num is not 10:
+#             self.radio1.send(bytes("hi" + str(num),"utf-8"))
+#             num = num + 1
 
         # Prints init state of PySquared hardware
         self.debug_print(str(self.hardware))

@@ -13,6 +13,55 @@ from debugcolor import co
 
 class functions:
 
+    
+    # INSPIREFLY FUNCTIONS:
+    
+    def AX_25Wrapper(self, message):
+        #TO-DO
+        return
+        
+        
+
+    def TransmitMessage(self, message):
+        #TO-DO
+        return
+        
+    
+    #This method is just for testing
+    def TransmitImageTest(self):
+        counter = 0
+        jpg_file = open(r"blue.jpg", 'rb')
+           
+        bytes_per_packet = 5
+          
+        bytesRemaining = True
+        
+        while(bytesRemaining):
+            
+            jpg_bytes = jpg_file.read(bytes_per_packet)
+            
+            if not jpg_bytes:
+                bytesRemaining = False
+                return
+            
+            self.send(jpg_bytes)
+            
+            
+            print("sent: ",jpg_bytes)
+            print(counter, " bytes sent, ", len(jpg_bytes) - counter, " bytes left.")
+            
+            counter += bytes_per_packet
+            
+            while not self.listen():
+                
+                time.sleep(0.5)
+                
+                self.send(jpg_bytes)
+                #self.send("HI")
+        self.send(0xFF)
+
+
+
     def debug_print(self,statement):
         if self.debug:
             print(co("[Functions]" + str(statement), 'green', 'bold'))
@@ -228,7 +277,7 @@ class functions:
         try:
             self.debug_print("Listening")
             # Change timeout back to 10
-            self.cubesat.radio1.receive_timeout=10
+            self.cubesat.radio1.receive_timeout=3
             received = self.cubesat.radio1.receive_with_ack(keep_listening=True)
         except Exception as e:
             self.debug_print("An Error has occured while listening: " + ''.join(traceback.format_exception(e)))
