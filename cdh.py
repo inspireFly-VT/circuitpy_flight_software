@@ -8,15 +8,36 @@ jokereply=["Your Mom","Your Mum","Your Face","not True lol","I have brought peac
 # pass-code for DEMO PURPOSES ONLY
 super_secret_code = b'' #put your own code here
 print(f"Super secret code is: {super_secret_code}")
+
+# Bronco's commands
+# commands = {
+#     b'\x8eb':    'noop',
+#     b'\xd4\x9f': 'hreset',   # new
+#     b'\x12\x06': 'shutdown',
+#     b'8\x93':    'query',    # new
+#     b'\x96\xa2': 'exec_cmd',
+#     b'\xa5\xb4': 'joke_reply',
+#     b'\x56\xc4': 'FSK'
+# }
+
+# inspireFly commands
 commands = {
-    b'\x8eb':    'noop',
-    b'\xd4\x9f': 'hreset',   # new
-    b'\x12\x06': 'shutdown',
-    b'8\x93':    'query',    # new
-    b'\x96\xa2': 'exec_cmd',
-    b'\xa5\xb4': 'joke_reply',
-    b'\x56\xc4': 'FSK'
+    b'\x10':    'noop',
+    b'\x11': 'hreset',   # new
+    b'\x12': 'shutdown',
+    b'\x13':    'query',    # new
+    #b'\x14': 'exec_cmd',   # not getting implemented
+    b'\x15': 'joke_reply',
+    b'\x16': 'send_SOH',
+    b'\x31': 'take_pic',
+    b'\x32': 'send_pic',
+    b'\x34': 'receive_pic',
+    b'\x1C': 'mag_on',
+    b'\x1D': 'mag_off',
+    b'\x1E': 'burn_on',
+    b'\x1F': 'heat_on',
 }
+
 ############### hot start helper ###############
 def hotstart_handler(cubesat,msg):
     # try
@@ -38,6 +59,14 @@ def hotstart_handler(cubesat,msg):
 
 ############### message handler ###############
 def message_handler(cubesat,msg):
+    
+    
+    # inspireFly - this code should eventually be swapped out with our own command processor which will pull
+    # out the important data such as the command
+    
+    
+    
+    
     multi_msg=False
     if len(msg) >= 10: # [RH header 4 bytes] [pass-code(4 bytes)] [cmd 2 bytes]
         if bytes(msg[4:8])==super_secret_code:
@@ -83,6 +112,19 @@ def message_handler(cubesat,msg):
 
 
 ########### commands without arguments ###########
+
+def take_pic(cubesat):
+    #TO-DO
+    return
+
+def send_pic(cubesat):
+    #TO-DO
+    return
+
+def send_SOH(cubesat):
+    #TO-DO
+    return
+
 def noop(cubesat):
     print('no-op')
     pass
