@@ -204,4 +204,16 @@ def query(cubesat,args):
 def exec_cmd(cubesat,args):
     print(f'exec: {args}')
     exec(args)
-    
+
+def burn_on(cubesat,args):
+      if args == b'\x0b\xfdI\xec':
+          print("Burning....")
+          cubesat.burn(1)
+          print("Burn complete")
+
+def heat_on(cubesat, args):
+    if args == b'\x0b\xfdI\xec':
+        cubesat.heater_on()   
+
+
+          
