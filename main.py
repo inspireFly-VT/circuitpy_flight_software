@@ -22,6 +22,7 @@ import storage
 import busio
 import microcontroller
 import board
+import os
 # 
 # spi = busio.SPI(board.SPI0_SCK, board.SPI0_MOSI, board.SPI0_MISO)
 # sd = sdcardio.SDCard(spi, board.SPI0_CS1)
@@ -30,17 +31,17 @@ import board
 
 f=functions.functions(c)
 
-# inspireFly Test Mode Loop !!!
-runOnce = True
-while True:
-    if runOnce:
-        print("You are in inspireFly test mode. Comment this while loop out on line 34 in main")
-        c.all_faces_on()
-        runOnce = False
-        f.TransmitImageTest()
-    #f.listen()
-    #f.send(0xFF)
-    print("Done")
+# # inspireFly Test Mode Loop !!!
+# runOnce = True
+# while True:
+#     if runOnce:
+#         print("You are in inspireFly test mode. Comment this while loop out on line 34 in main")
+#         c.all_faces_on()
+#         runOnce = False
+#         f.TransmitImageTest()
+#     #f.listen()
+#     #f.send(0xFF)
+#     print("Done")
     
     
 
@@ -286,23 +287,32 @@ def normal_power_operations():
                 debug_print(f'Outta time!' + ''.join(traceback.format_exception(e)))
             
             gc.collect()
-            await asyncio.sleep(500)
+            await asyncio.sleep(300)
     
+
+
 
     async def pcb_comms():
         debug_print("Yapping to the PCB now - D")
+        await asyncio.sleep(30)
 
-        await asyncio.sleep(30)  # Initial delay before starting communication
+        image_count = 1  # Start from 1
+        image_dir = "/sd"
+
+        # Ensure the directory exists (CircuitPython auto-mounts /sd, but this prevents issues)
+        try:
+            if "sd" not in os.listdir("/"):
+                raise OSError("SD card not found")
+        except OSError:
+            debug_print("SD card not detected or cannot be accessed!")
+            return
 
         while True:
             debug_print("Starting new PCB communication cycle")
-
-            # Initial garbage collection to free memory before anything starts
             gc.collect()
             debug_print(f"Free memory before cycle: {gc.mem_free()} bytes")
 
             try:
-                # Reinitialize com1 and fcb_comm each cycle to prevent memory issues
                 com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
                 com1.start()
                 fcb_comm = FCBCommunicator(com1)
@@ -316,49 +326,73 @@ def normal_power_operations():
 
                     if fcb_comm.wait_for_acknowledgment():
                         await asyncio.sleep(1)
-
-                        # Perform garbage collection before data transfer
                         gc.collect()
                         debug_print(f"Free memory before data transfer: {gc.mem_free()} bytes")
 
-                        img_file_path = "/sd/image.jpg"
+                        # Get existing files and determine next available filename
+                        existing_files = os.listdir(image_dir)
+                        while f"inspireFly_Capture_{image_count}.jpg" in existing_files:
+                            image_count += 1
+
+                        img_file_path = f"{image_dir}/inspireFly_Capture_{image_count}.jpg"
+                        temp_file_path = f"{image_dir}/inspireFly_Capture_{image_count}_temp.jpg"
+
                         try:
+                            # Preallocate file (estimated size)
+                            estimated_size = 1000  # Adjust as needed
                             with open(img_file_path, "wb") as img_file:
+                                img_file.write(b'\xFF' * estimated_size)
+                            debug_print(f"Preallocated {estimated_size} bytes for image storage.")
+
+                            # Write data to the preallocated file
+                            offset = 0
+                            with open(img_file_path, "r+b") as img_file:
                                 while True:
                                     jpg_bytes = fcb_comm.send_chunk_request()
-
                                     if jpg_bytes is None:
-                                        break  # Exit if no more data
-
-                                    img_file.write(jpg_bytes)  # Write each chunk immediately
-                                    debug_print(f"Saved chunk of {len(jpg_bytes)} bytes")
-
-                                    # Free memory by explicitly deleting jpg_bytes
+                                        break
+                                    img_file.seek(offset)
+                                    img_file.write(jpg_bytes)
+                                    offset += len(jpg_bytes)
+                                    debug_print(f"Saved chunk of {len(jpg_bytes)} bytes at offset {offset}")
                                     del jpg_bytes
-                                    jpg_bytes = None
                                     gc.collect()
+                                    break
 
-                            # Explicitly delete file reference
-                            del img_file
-                            img_file = None
-                            gc.collect()
+                            debug_print(f"Finished writing image. Data size: {offset} bytes")
 
-                        except IOError as e:
+                            # Workaround for truncate: copy valid data to a new file
+                            with open(img_file_path, "rb") as orig_file:
+                                valid_data = orig_file.read(offset)
+                            with open(temp_file_path, "wb") as temp_file:
+                                temp_file.write(valid_data)
+
+                            # Remove the old file and rename the new file
+                            os.remove(img_file_path)
+                            os.rename(temp_file_path, img_file_path)
+                            debug_print(f"File saved as {img_file_path}")
+
+                        except OSError as e:
                             debug_print(f"Error writing to SD card: {str(e)}")
-                            continue  # Continue to next cycle if SD card is full or unavailable
+                            continue
+
+                command = 'end'
+
+                if command.lower() == 'end':
+                    fcb_comm.end_communication()
+                    await asyncio.sleep(3)
 
             except Exception as e:
-                debug_print(f"Error in PCB communication: {''.join(traceback.format_exception(e))}")
+                debug_print(f"Error in PCB communication: {str(e)}")
 
-            # Cleanup and reinitialize before next cycle
             del com1, fcb_comm
-            com1 = None
-            fcb_comm = None
             gc.collect()
-
             debug_print(f"Free memory after cleanup: {gc.mem_free()} bytes")
+            await asyncio.sleep(500)
 
-            await asyncio.sleep(500)  # Delay before next cycle
+
+
+
 
 
     async def main_loop():

@@ -64,6 +64,14 @@ def message_handler(cubesat,msg):
     # inspireFly - this code should eventually be swapped out with our own command processor which will pull
     # out the important data such as the command
     
+    f = functions.functions(cubesat)
+    
+    if(msg[5:6] == 0x15):
+        f.joke_reply()
+    
+    elif(msg[0:1] == 0x32):
+        f.transmit_image()
+        
     
     
     

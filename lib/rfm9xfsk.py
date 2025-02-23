@@ -310,6 +310,7 @@ class RFM9xFSK(RFMSPI):
         """Listen for packets to be received by the chip.  Use :py:func:`receive`
         to listen, wait and retrieve packets as they're available.
         """
+        
         self.operation_mode = RX_MODE
         self.dio0_mapping = 0b00  # Interrupt on rx done.
 

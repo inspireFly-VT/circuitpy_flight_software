@@ -26,6 +26,29 @@ class functions:
         #TO-DO
         return
         
+        
+    def Transmit_Image(self):
+        counter = 0
+        jpg_file = open(r"blue.jpg", 'rb')    
+        bytes_per_packet = 5
+        
+        while(bytesRemaining):   
+            jpg_bytes = jpg_file.read(bytes_per_packet)
+            
+            if not jpg_bytes:
+                return
+            
+            self.send(jpg_bytes)        
+            print("sent: ",jpg_bytes)
+            
+            counter += bytes_per_packet
+            print("Sent this many bytes: ", counter)
+            
+            while not self.listen():                   
+                self.send(jpg_bytes)
+                #self.send("HI")
+                
+        self.send(0xFF)
     
     #This method is just for testing
     def TransmitImageTest(self):
@@ -276,6 +299,8 @@ class functions:
         #This just passes the message through. Maybe add more functionality later. 
         try:
             self.debug_print("Listening")
+            
+            
             # Change timeout back to 10
             self.cubesat.radio1.receive_timeout=3
             received = self.cubesat.radio1.receive_with_ack(keep_listening=True)
