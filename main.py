@@ -403,10 +403,10 @@ def normal_power_operations():
         t3 = asyncio.create_task(s_imu_data())
         t4 = asyncio.create_task(g_face_data())
         t5 = asyncio.create_task(detumble())
-        #t6 = asyncio.create_task(joke())
-        t7 = asyncio.create_task(pcb_comms())
+        t6 = asyncio.create_task(joke())
+        #t7 = asyncio.create_task(pcb_comms())
         
-        await asyncio.gather(t1,t2,t3,t4,t5,t7)
+        await asyncio.gather(t1,t2,t3,t4,t5,t6)
         
     asyncio.run(main_loop())
 
