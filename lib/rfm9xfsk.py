@@ -280,7 +280,7 @@ class RFM9xFSK(RFMSPI):
         self.afc_bw_mantissa = 0b00
         self.afc_bw_exponent = 0b000
         self.packet_format = 1  # Variable length.
-        self.dc_free = 0b10  # Whitening
+        self.dc_free = 0b01  # Whitening
         # Set transmit power to 13 dBm, a safe value any module supports.
         self._tx_power = 13
         self.tx_power = self._tx_power

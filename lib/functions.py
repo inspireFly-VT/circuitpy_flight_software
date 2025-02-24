@@ -10,11 +10,18 @@ import gc
 import traceback
 import random
 from debugcolor import co
+import sys
+import os
+import math
 
 class functions:
 
     
     # INSPIREFLY FUNCTIONS:
+    
+    
+#     def send_joke(joke):
+        
     
     def AX_25Wrapper(self, message):
         #TO-DO
@@ -27,12 +34,33 @@ class functions:
         return
         
         
-    def Transmit_Image(self):
-        counter = 0
-        jpg_file = open(r"blue.jpg", 'rb')    
-        bytes_per_packet = 5
+    def transmit_image(self):
+
+        file_path = "blue.jpg"
+        file_info = os.stat(file_path)
+
+        file_size = file_info[6]  # The 7th item in the stat tuple is the file size
+        print(f"Image size: ", file_size)
         
-        while(bytesRemaining):   
+        bytes_per_packet = 10
+        
+        total_packets = file_size / bytes_per_packet
+        total_packets = math.ceil(total_packets)
+        print(total_packets)
+        
+        counter = 0
+        
+        jpg_file = open(r"blue.jpg", 'rb')
+        
+        firstPacketHandshake = False
+        while(not firstPacketHandshake):
+            self.send(total_packets)
+            if self.listen():
+                firstPacketHandshake = True
+            time.sleep(0.1)
+        
+        
+        while True:   
             jpg_bytes = jpg_file.read(bytes_per_packet)
             
             if not jpg_bytes:
@@ -49,9 +77,11 @@ class functions:
                 #self.send("HI")
                 
         self.send(0xFF)
+        
     
     #This method is just for testing
     def TransmitImageTest(self):
+        import cdh
         counter = 0
         jpg_file = open(r"blue.jpg", 'rb')
            
@@ -82,6 +112,8 @@ class functions:
                 self.send(jpg_bytes)
                 #self.send("HI")
         self.send(0xFF)
+        cdh.set_transmit_image_running(False)
+        del cdh
 
 
 
@@ -509,76 +541,76 @@ class functions:
         message=str(msg)
         self.field.inspireFlysBeaconTestingFunction(message)
     
-    def pcb_comms():
-        debug_print("Yapping to the PCB now - D")
-
-        image_count = 1  # Start from 1
-        image_dir = "/sd"
-
-        # Ensure the directory exists (CircuitPython auto-mounts /sd, but this prevents issues)
-        try:
-            if "sd" not in os.listdir("/"):
-                raise OSError("SD card not found")
-        except OSError:
-            debug_print("SD card not detected or cannot be accessed!")
-            return
-
-        while True:
-            debug_print("Starting new PCB communication cycle")
-            gc.collect()
-            debug_print(f"Free memory before cycle: {gc.mem_free()} bytes")
-
-            try:
-                com1 = EasyComms(board.TX, board.RX, baud_rate=9600)
-                com1.start()
-                fcb_comm = FCBCommunicator(com1)
-
-                overhead_command = com1.overhead_read()
-                command = 'chunk'
-
-                if command.lower() == 'chunk':
-                    fcb_comm.send_command("chunk")
-
-                    if fcb_comm.wait_for_acknowledgment():
-                        await asyncio.sleep(1)
-                        gc.collect()
-                        debug_print(f"Free memory before data transfer: {gc.mem_free()} bytes")
-
-                        # Get existing files and determine next available filename
-                        existing_files = os.listdir(image_dir)
-                        while f"inspireFly_Capture_{image_count}.jpg" in existing_files:
-                            image_count += 1
-
-                        img_file_path = f"{image_dir}/inspireFly_Capture_{image_count}.jpg"
-                        temp_file_path = f"{image_dir}/inspireFly_Capture_{image_count}_temp.jpg"
-
-                        try:
-                            offset = 0
-                            with open(img_file_path, "wb") as img_file:
-                                while True:
-                                    jpg_bytes = fcb_comm.send_chunk_request()
-                                    if jpg_bytes is None:
-                                        break
-                                    img_file.write(jpg_bytes)
-                                    offset += len(jpg_bytes)
-                                    debug_print(f"Saved chunk of {len(jpg_bytes)} bytes at offset {offset}")
-                                    del jpg_bytes
-                                    gc.collect()
-
-                            debug_print(f"Finished writing image. Data size: {offset} bytes")
-
-                        except OSError as e:
-                            debug_print(f"Error writing to SD card: {str(e)}")
-                            continue
-
-                command = 'end'
-
-                if command.lower() == 'end':
-                    fcb_comm.end_communication()
-
-            except Exception as e:
-                debug_print(f"Error in PCB communication: {str(e)}")
-
-            del com1, fcb_comm
-            gc.collect()
-            debug_print(f"Free memory after cleanup: {gc.mem_free()} bytes")
+#     def pcb_comms(self):
+#         debug_print("Yapping to the PCB now - D")
+# 
+#         image_count = 1  # Start from 1
+#         image_dir = "/sd"
+# 
+#         # Ensure the directory exists (CircuitPython auto-mounts /sd, but this prevents issues)
+#         try:
+#             if "sd" not in os.listdir("/"):
+#                 raise OSError("SD card not found")
+#         except OSError:
+#             self.debug_print("SD card not detected or cannot be accessed!")
+#             return
+# 
+#         while True:
+#             self.debug_print("Starting new PCB communication cycle")
+#             self.gc.collect()
+#             self.debug_print(f"Free memory before cycle: {gc.mem_free()} bytes")
+# 
+#             try:
+#                 com1 = self.EasyComms(board.TX, board.RX, baud_rate=9600)
+#                 com1.start()
+#                 fcb_comm = FCBCommunicator(com1)
+# 
+#                 overhead_command = com1.overhead_read()
+#                 command = 'chunk'
+# 
+#                 if command.lower() == 'chunk':
+#                     fcb_comm.send_command("chunk")
+# 
+#                     if fcb_comm.wait_for_acknowledgment():
+#                         await asyncio.sleep(1)
+#                         gc.collect()
+#                         debug_print(f"Free memory before data transfer: {gc.mem_free()} bytes")
+# 
+#                         # Get existing files and determine next available filename
+#                         existing_files = os.listdir(image_dir)
+#                         while f"inspireFly_Capture_{image_count}.jpg" in existing_files:
+#                             image_count += 1
+# 
+#                         img_file_path = f"{image_dir}/inspireFly_Capture_{image_count}.jpg"
+#                         temp_file_path = f"{image_dir}/inspireFly_Capture_{image_count}_temp.jpg"
+# 
+#                         try:
+#                             offset = 0
+#                             with open(img_file_path, "wb") as img_file:
+#                                 while True:
+#                                     jpg_bytes = fcb_comm.send_chunk_request()
+#                                     if jpg_bytes is None:
+#                                         break
+#                                     img_file.write(jpg_bytes)
+#                                     offset += len(jpg_bytes)
+#                                     debug_print(f"Saved chunk of {len(jpg_bytes)} bytes at offset {offset}")
+#                                     del jpg_bytes
+#                                     gc.collect()
+# 
+#                             debug_print(f"Finished writing image. Data size: {offset} bytes")
+# 
+#                         except OSError as e:
+#                             debug_print(f"Error writing to SD card: {str(e)}")
+#                             continue
+# 
+#                 command = 'end'
+# 
+#                 if command.lower() == 'end':
+#                     fcb_comm.end_communication()
+# 
+#             except Exception as e:
+#                 debug_print(f"Error in PCB communication: {str(e)}")
+# 
+#             del com1, fcb_comm
+#             gc.collect()
+#             debug_print(f"Free memory after cleanup: {gc.mem_free()} bytes")

@@ -31,17 +31,17 @@ import os
 
 f=functions.functions(c)
 
-# # inspireFly Test Mode Loop !!!
-# runOnce = True
-# while True:
-#     if runOnce:
-#         print("You are in inspireFly test mode. Comment this while loop out on line 34 in main")
-#         c.all_faces_on()
-#         runOnce = False
-#         f.TransmitImageTest()
-#     #f.listen()
-#     #f.send(0xFF)
-#     print("Done")
+# inspireFly Test Mode Loop !!!
+runOnce = True
+while True:
+    if runOnce:
+        print("You are in inspireFly test mode. Comment this while loop out on line 34 in main")
+        c.all_faces_on()
+        runOnce = False
+        #f.TransmitImageTest()
+    f.listen()
+    #f.send(0xFF)
+    #print("Done")
     
     
 

@@ -1,5 +1,6 @@
 import time
 import random
+import functions
 
 # our 4 byte code to authorize commands
 # pass-code for DEMO PURPOSES ONLY
@@ -38,6 +39,8 @@ commands = {
     b'\x1F': 'heat_on',
 }
 
+transmit_image_running = False
+
 ############### hot start helper ###############
 def hotstart_handler(cubesat,msg):
     # try
@@ -66,11 +69,25 @@ def message_handler(cubesat,msg):
     
     f = functions.functions(cubesat)
     
+    command = bytearray()
+    command.append(0x32)
+    
     if(msg[5:6] == 0x15):
         f.joke_reply()
-    
-    elif(msg[0:1] == 0x32):
+        
+    elif(msg == command):
+        packetIndex = (msg[7:31]) #999999 is 20 bits long, should be able to handle any packet index request
+        print("Transmitting image")
+        print(packetIndex)
         f.transmit_image()
+
+    
+    print("Comparing ", msg, " to ", command)
+    
+    print(list(msg))
+
+    
+    
         
     
     
@@ -117,6 +134,8 @@ def message_handler(cubesat,msg):
                     message_handler(cubesat,response)
         else:
             print('bad code?')
+            
+        del f
 
 
 ########### commands without arguments ###########
@@ -191,4 +210,7 @@ def query(cubesat,args):
 def exec_cmd(cubesat,args):
     print(f'exec: {args}')
     exec(args)
+    
+# def set_image_transfer_running(boolean):
+#     global image_transfer_running = boolean
     
