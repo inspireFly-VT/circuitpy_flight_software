@@ -1,5 +1,6 @@
 import time
 import random
+import traceback
 import functions
 
 # our 4 byte code to authorize commands
@@ -142,8 +143,8 @@ def send_SOH(cubesat):
             f"FK:{int(cubesat.f_fsk)}"
         ]
     except Exception as e:
-        cubesat.radio1.send(f.debug_print("Couldn't aquire data for the state of health: " + ''.join(traceback.format_exception(e))))
-    print(cubesat.radio1.send(state_list))
+        cubesat.send_SOH(f.debug_print("Couldn't aquire data for the state of health: " + ''.join(traceback.format_exception(e))))
+    cubesat.send_SOH(state_list)
     return
 
 def noop(cubesat):
@@ -154,7 +155,7 @@ def hreset(cubesat):
     print('Resetting')
     try:
         cubesat.radio1.send(data=b'resetting')
-        cubesat.micro.on_next_reset(self.cubesat.micro.RunMode.NORMAL)
+        cubesat.micro.on_next_reset(cubesat.micro.RunMode.NORMAL)
         cubesat.micro.reset()
     except:
         pass
@@ -165,7 +166,8 @@ def FSK(cubesat):
 def joke_reply(cubesat):
     joke=random.choice(jokereply)
     print(joke)
-    cubesat.radio1.send(joke)
+    #cubesat.radio1.send(joke)
+    cubesat.send_joke(joke)
 
 ########### commands with arguments ###########
 

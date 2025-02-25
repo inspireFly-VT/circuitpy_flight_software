@@ -12,6 +12,31 @@ import random
 from debugcolor import co
 
 class functions:
+    
+    def send_joke(self, msg):
+        #add ax25
+        self.send(b'\x11'+msg)        
+    def send_beacon(self):
+        #add ax25
+        self.send(b'\x21'+f"PM:{self.cubesat.power_mode}"+ " " + f"VB:{self.cubesat.battery_voltage}")
+        
+    def send_beaconP(self):
+        #add ax25
+        self.send(b'\x22'+ f"PM:{self.cubesat.power_mode}"+ " " + f"VB:{self.cubesat.battery_voltage}") #+ number of picture packets
+    
+    def send_SOH(self,msg):
+        #add ax25
+        self.send(b'\x25'+msg)
+        
+    def send_SOHP(self,msg):
+        #add ax25
+        self.send(b'\x26')# + state of health + number of picture packets
+    
+    def send_selfie(self,msg):
+        #add ax25
+        return
+    
+        
 
     def debug_print(self,statement):
         if self.debug:
